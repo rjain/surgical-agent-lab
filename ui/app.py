@@ -1,0 +1,370 @@
+"""The lab interface.
+
+SUPPLIED — you do not need to change this file, though you are welcome to.
+
+Three tabs:
+
+* **Session** — works from the first minute. The timeline, the flagged moments
+  and the measurements behind them, all from the supplied Lab 1 modules.
+* **Coach** — comes alive when you finish Variant A.
+* **Auditor** — comes alive when you finish Variant B.
+
+Run it with::
+
+    streamlit run ui/app.py
+
+The Explain action on each flagged moment calls *your* ``analyze_clip`` from
+``lab/cp1_analyze.py``. Until you write it, it reports that it is not wired up
+yet — that is expected, not a bug.
+"""
+
+from __future__ import annotations
+
+import os
+import sys
+from pathlib import Path
+
+import altair as alt
+import pandas as pd
+import streamlit as st
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from lab.data import list_cases, load_case, overlapping_tools  # noqa: E402
+from lab.metrics import session_summary, step_metrics  # noqa: E402
+from lab.rules import find_deviations  # noqa: E402
+
+# Prepared for the lab and verified to contain flags worth discussing. Shown
+# first so nobody's first impression is a session with nothing in it.
+CURATED = ["case_045", "case_129", "case_125", "case_036", "case_044", "case_059"]
+
+# Set LAB_REPLAY=0 if the moving playhead misbehaves; the timeline still works.
+REPLAY_ENABLED = os.environ.get("LAB_REPLAY", "1") != "0"
+TICK_SECONDS = 0.25
+PLAYHEAD_STEP_S = 20.0
+
+RULE_COLOURS = {
+    "swap_rate": "#0F5F63",
+    "step_overrun": "#B4611E",
+    "step_oscillation": "#4A6FA5",
+    "unknown_instrument": "#7A4F9E",
+}
+
+st.set_page_config(page_title="Surgical Workflow Deviation Auditor", layout="wide")
+
+
+# --------------------------------------------------------------------------
+# optional participant code — absent until they write it
+# --------------------------------------------------------------------------
+
+
+def _load_analyzer():
+    try:
+        from lab.cp1_analyze import analyze_clip
+
+        return analyze_clip
+    except Exception:
+        return None
+
+
+def _load_coach():
+    try:
+        from lab.variants.coach import build_coach, build_workflow_tracker
+
+        return build_coach, build_workflow_tracker
+    except Exception:
+        return None, None
+
+
+def _load_auditor():
+    try:
+        from lab.variants.auditor import build_auditor
+
+        return build_auditor
+    except Exception:
+        return None
+
+
+# --------------------------------------------------------------------------
+# timeline
+# --------------------------------------------------------------------------
+
+
+def build_timeline(case, metrics: pd.DataFrame, deviations, part: int, playhead):
+    """Layered chart: step bands, one lane per arm, a mark per flag."""
+    steps = metrics[metrics["part"] == part].copy()
+    steps["start_m"] = steps["start_s"] / 60
+    steps["end_m"] = steps["end_s"] / 60
+    steps["lane"] = "task step"
+
+    tools = case.tools[case.tools["part"] == part].copy()
+    tools["start_m"] = tools["start_s"] / 60
+    tools["end_m"] = tools["end_s"] / 60
+    tools["lane"] = tools["arm"].astype(str)
+
+    lanes = ["task step"] + sorted(tools["lane"].unique())
+
+    band = (
+        alt.Chart(steps)
+        .mark_bar(height=18, cornerRadius=2)
+        .encode(
+            x=alt.X("start_m:Q", title="minutes into part"),
+            x2="end_m:Q",
+            y=alt.Y("lane:N", sort=lanes, title=None),
+            color=alt.Color("task:N", legend=alt.Legend(title="task step")),
+            tooltip=["task", "duration_s", "tool_changes", "duration_ratio"],
+        )
+    )
+    arms = (
+        alt.Chart(tools)
+        .mark_bar(height=11, opacity=0.75, cornerRadius=1)
+        .encode(
+            x="start_m:Q",
+            x2="end_m:Q",
+            y=alt.Y("lane:N", sort=lanes),
+            color=alt.Color("tool:N", legend=alt.Legend(title="instrument")),
+            tooltip=["arm", "tool", "commercial", "duration_s"],
+        )
+    )
+    layers = [band, arms]
+
+    here = [d for d in deviations if d.part == part]
+    if here:
+        flags = pd.DataFrame(
+            {
+                "mid_m": [(d.start_s + d.end_s) / 120 for d in here],
+                "rule": [d.rule_id for d in here],
+                "evidence": [d.evidence for d in here],
+                "step": [d.step for d in here],
+                "lane": ["task step"] * len(here),
+                # dim what the playhead has not reached yet
+                "reached": [
+                    playhead is None or d.start_s <= playhead for d in here
+                ],
+            }
+        )
+        layers.append(
+            alt.Chart(flags)
+            .mark_point(size=150, shape="triangle-down", filled=True, yOffset=-20)
+            .encode(
+                x="mid_m:Q",
+                y=alt.Y("lane:N", sort=lanes),
+                color=alt.Color(
+                    "rule:N",
+                    scale=alt.Scale(
+                        domain=list(RULE_COLOURS), range=list(RULE_COLOURS.values())
+                    ),
+                    legend=alt.Legend(title="flagged"),
+                ),
+                opacity=alt.condition(
+                    alt.datum.reached, alt.value(1.0), alt.value(0.22)
+                ),
+                tooltip=["rule", "step", "evidence"],
+            )
+        )
+
+    if playhead is not None:
+        layers.append(
+            alt.Chart(pd.DataFrame({"m": [playhead / 60]}))
+            .mark_rule(strokeWidth=2, color="#14181A")
+            .encode(x="m:Q")
+        )
+
+    return alt.layer(*layers).properties(height=28 * len(lanes) + 60)
+
+
+# --------------------------------------------------------------------------
+# session tab
+# --------------------------------------------------------------------------
+
+
+def render_session(case_id: str) -> None:
+    case = load_case(case_id)
+    metrics = step_metrics(case)
+    deviations = find_deviations(case_id)
+    summary = session_summary(case)
+
+    cols = st.columns(5)
+    cols[0].metric("Segments", summary["segments"])
+    cols[1].metric("Flagged moments", len(deviations))
+    cols[2].metric("Instrument mounts", summary["tool_mounts"])
+    cols[3].metric("Labelled", f"{(summary['labelled_fraction'] or 0) * 100:.0f}%")
+    cols[4].metric("Video parts", len(case.parts))
+
+    if case.is_multipart:
+        st.caption(
+            f"This session is split across parts {case.parts}. Time restarts at "
+            "zero in each part, so the parts are shown separately."
+        )
+
+    part = case.parts[0]
+    if len(case.parts) > 1:
+        part = st.radio("Part", case.parts, horizontal=True)
+
+    in_part = metrics[metrics["part"] == part]
+    part_end = float(in_part["end_s"].max()) if len(in_part) else 0.0
+    part_start = float(in_part["start_s"].min()) if len(in_part) else 0.0
+
+    playhead = None
+    if REPLAY_ENABLED and part_end > part_start:
+        key = f"playhead_{case_id}_{part}"
+        st.session_state.setdefault(key, part_start)
+        controls = st.columns([1, 1, 6])
+        playing = controls[0].toggle("Play", key=f"play_{case_id}_{part}")
+        if controls[1].button("Reset", key=f"reset_{case_id}_{part}"):
+            st.session_state[key] = part_start
+        playhead = controls[2].slider(
+            "Playhead (minutes)",
+            min_value=part_start / 60,
+            max_value=part_end / 60,
+            value=st.session_state[key] / 60,
+            key=f"slider_{case_id}_{part}",
+            label_visibility="collapsed",
+        ) * 60
+        st.session_state[key] = playhead
+
+        if playing:
+            @st.fragment(run_every=TICK_SECONDS)
+            def _advance() -> None:
+                nxt = st.session_state[key] + PLAYHEAD_STEP_S
+                st.session_state[key] = part_start if nxt > part_end else nxt
+
+            _advance()
+
+    st.altair_chart(
+        build_timeline(case, metrics, deviations, part, playhead),
+        width="stretch",
+    )
+
+    st.subheader("Flagged moments")
+    here = [d for d in deviations if d.part == part]
+    if not here:
+        st.info("No flags in this part. That is a legitimate result, not a failure.")
+    analyze = _load_analyzer()
+
+    for i, dev in enumerate(here):
+        reached = playhead is None or dev.start_s <= playhead
+        window = f"{dev.start_s / 60:.1f}–{dev.end_s / 60:.1f} min"
+        label = f"{'' if reached else '· '}{dev.rule_id} — {dev.step} — {window}"
+        with st.expander(label, expanded=False):
+            st.write(f"**Evidence.** {dev.evidence}")
+            st.caption(f"score {dev.score} · an efficiency observation, not a clinical finding")
+            during = overlapping_tools(case.tools, dev.part, dev.start_s, dev.end_s)
+            st.dataframe(
+                during[["arm", "tool", "commercial", "start_s", "end_s"]],
+                width="stretch",
+                hide_index=True,
+            )
+            if st.button("Explain this moment", key=f"explain_{part}_{i}"):
+                if analyze is None:
+                    st.warning(
+                        "`lab/cp1_analyze.py` is not written yet — that is Lab 2. "
+                        "Once `analyze_clip` exists, its notes appear here."
+                    )
+                else:
+                    with st.spinner("Asking Gemini about this window…"):
+                        try:
+                            notes = analyze(dev.case_id, dev.start_s, dev.end_s)
+                            render_notes(notes)
+                        except Exception as exc:
+                            st.error(f"{type(exc).__name__}: {exc}")
+
+    with st.expander("All measurements for this part"):
+        st.dataframe(in_part, width="stretch", hide_index=True)
+
+
+def render_notes(notes) -> None:
+    """Render TechniqueNotes as structure, so you can see your schema worked."""
+    data = notes if isinstance(notes, dict) else getattr(notes, "model_dump", dict)()
+    if summary := data.get("summary"):
+        st.write(summary)
+    for obs in data.get("observations", []):
+        left, right = st.columns([1, 6])
+        left.code(f"{obs.get('t', 0):.1f}s")
+        right.write(
+            f"**{obs.get('what', '')}** — {obs.get('technique_note', '')} "
+            f"`{obs.get('confidence', '')}`"
+        )
+    if factors := data.get("visible_factors"):
+        st.caption("Visible factors: " + "; ".join(factors))
+    if not_visible := data.get("not_visible"):
+        with st.expander("What this footage can't show"):
+            for item in not_visible:
+                st.write(f"- {item}")
+
+
+# --------------------------------------------------------------------------
+# variant tabs
+# --------------------------------------------------------------------------
+
+
+def render_coach(case_id: str) -> None:
+    build_coach, build_tracker = _load_coach()
+    if build_coach is None:
+        st.info(
+            "**Variant A is not wired up yet.** Write `build_workflow_tracker()` "
+            "and `build_coach()` in `lab/variants/coach.py` and this tab becomes "
+            "a chat with your agent."
+        )
+        st.caption(
+            "The trace of which tools were called appears under each answer. "
+            "Without it you cannot tell grounding from invention."
+        )
+        return
+    st.success("Coach loaded. Wire the runner in to start the conversation.")
+
+
+def render_auditor(case_id: str) -> None:
+    build_auditor = _load_auditor()
+    if build_auditor is None:
+        st.info(
+            "**Variant B is not wired up yet.** Write `build_auditor()` in "
+            "`lab/variants/auditor.py` and this tab runs it over the session."
+        )
+        return
+    st.success("Auditor loaded. Wire the runner in to produce a report.")
+
+
+# --------------------------------------------------------------------------
+
+
+def main() -> None:
+    st.title("Surgical Workflow Deviation Auditor")
+    st.caption(
+        "Retrospective review of recorded **training exercise** footage. "
+        "Not a medical device; not for clinical use."
+    )
+
+    cases = list_cases()
+    if not cases:
+        st.error(
+            "No cases found. Set `LAB_DATA_DIR` to the folder holding the "
+            "`case_*` directories, then reload."
+        )
+        return
+
+    prepared = [c for c in CURATED if c in cases]
+    others = [c for c in cases if c not in prepared]
+    ordered = prepared + others
+    case_id = st.sidebar.selectbox(
+        "Session",
+        ordered,
+        index=0,
+        format_func=lambda c: f"{c}  ·  prepared" if c in prepared else c,
+    )
+    st.sidebar.caption(
+        f"{len(prepared)} prepared for the lab, {len(others)} others available"
+    )
+    if not REPLAY_ENABLED:
+        st.sidebar.caption("Replay disabled (LAB_REPLAY=0)")
+
+    session, coach, auditor = st.tabs(["Session", "Coach", "Auditor"])
+    with session:
+        render_session(case_id)
+    with coach:
+        render_coach(case_id)
+    with auditor:
+        render_auditor(case_id)
+
+
+main()

@@ -1,0 +1,21 @@
+{
+  "source_cases": 155,
+  "median_duration_s": {
+    "Range of motion": 340.9,
+    "Rectal artery/vein": 600.2,
+    "Retraction and collision avoidance": 171.5,
+    "Skills application": 992.6,
+    "Suspensory ligaments": 587.6,
+    "Suturing": 480.4,
+    "Uterine horn": 1113.1
+  },
+  "segment_count": {
+    "Range of motion": 52,
+    "Rectal artery/vein": 180,
+    "Retraction and collision avoidance": 97,
+    "Skills application": 53,
+    "Suspensory ligaments": 129,
+    "Suturing": 479,
+    "Uterine horn": 140
+  }
+}

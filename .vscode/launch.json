@@ -1,0 +1,36 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run the lab interface",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "streamlit",
+      "args": ["run", "ui/app.py"],
+      "console": "integratedTerminal",
+      "justMyCode": false
+    },
+    {
+      "name": "Preflight (local checks only)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/preflight.py",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Preflight (--cloud, makes one model call)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/preflight.py",
+      "args": ["--cloud"],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Evaluate the rules",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/tools/evaluate_rules.py",
+      "console": "integratedTerminal"
+    }
+  ]
+}
