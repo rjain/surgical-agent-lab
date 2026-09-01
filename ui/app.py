@@ -4,8 +4,9 @@ SUPPLIED — you do not need to change this file, though you are welcome to.
 
 Three tabs:
 
-* **Session** — works from the first minute. The timeline, the flagged moments
-  and the measurements behind them, all from the supplied Lab 1 modules.
+* **Session** — works from the first minute. A picture of the label files: the
+  timeline, the flagged moments, and the measurements behind them. No video and
+  nothing live — `rules.py` ran over the whole session before the page rendered.
 * **Coach** — comes alive when you finish Variant A.
 * **Auditor** — comes alive when you finish Variant B.
 
@@ -37,11 +38,6 @@ from lab.rules import find_deviations  # noqa: E402
 # Prepared for the lab and verified to contain flags worth discussing. Shown
 # first so nobody's first impression is a session with nothing in it.
 CURATED = ["case_045", "case_129", "case_125", "case_036", "case_044", "case_059"]
-
-# Set LAB_REPLAY=0 if the moving playhead misbehaves; the timeline still works.
-REPLAY_ENABLED = os.environ.get("LAB_REPLAY", "1") != "0"
-TICK_SECONDS = 0.25
-PLAYHEAD_STEP_S = 20.0
 
 RULE_COLOURS = {
     "swap_rate": "#0F5F63",
@@ -90,8 +86,13 @@ def _load_auditor():
 # --------------------------------------------------------------------------
 
 
-def build_timeline(case, metrics: pd.DataFrame, deviations, part: int, playhead):
-    """Layered chart: step bands, one lane per arm, a mark per flag."""
+def build_timeline(case, metrics: pd.DataFrame, deviations, part: int):
+    """Layered chart: step bands, one lane per arm, a mark per flag.
+
+    This is a picture of the label files and nothing more. Every mark on it
+    comes from `rules.py`, which ran over the whole session before the page
+    rendered — there is no video here and nothing is happening live.
+    """
     steps = metrics[metrics["part"] == part].copy()
     steps["start_m"] = steps["start_s"] / 60
     steps["end_m"] = steps["end_s"] / 60
@@ -137,10 +138,6 @@ def build_timeline(case, metrics: pd.DataFrame, deviations, part: int, playhead)
                 "evidence": [d.evidence for d in here],
                 "step": [d.step for d in here],
                 "lane": ["task step"] * len(here),
-                # dim what the playhead has not reached yet
-                "reached": [
-                    playhead is None or d.start_s <= playhead for d in here
-                ],
             }
         )
         layers.append(
@@ -156,18 +153,8 @@ def build_timeline(case, metrics: pd.DataFrame, deviations, part: int, playhead)
                     ),
                     legend=alt.Legend(title="flagged"),
                 ),
-                opacity=alt.condition(
-                    alt.datum.reached, alt.value(1.0), alt.value(0.22)
-                ),
                 tooltip=["rule", "step", "evidence"],
             )
-        )
-
-    if playhead is not None:
-        layers.append(
-            alt.Chart(pd.DataFrame({"m": [playhead / 60]}))
-            .mark_rule(strokeWidth=2, color="#14181A")
-            .encode(x="m:Q")
         )
 
     return alt.layer(*layers).properties(height=28 * len(lanes) + 60)
@@ -205,35 +192,8 @@ def render_session(case_id: str) -> None:
     part_end = float(in_part["end_s"].max()) if len(in_part) else 0.0
     part_start = float(in_part["start_s"].min()) if len(in_part) else 0.0
 
-    playhead = None
-    if REPLAY_ENABLED and part_end > part_start:
-        key = f"playhead_{case_id}_{part}"
-        st.session_state.setdefault(key, part_start)
-        controls = st.columns([1, 1, 6])
-        playing = controls[0].toggle("Play", key=f"play_{case_id}_{part}")
-        if controls[1].button("Reset", key=f"reset_{case_id}_{part}"):
-            st.session_state[key] = part_start
-        playhead = controls[2].slider(
-            "Playhead (minutes)",
-            min_value=part_start / 60,
-            max_value=part_end / 60,
-            value=st.session_state[key] / 60,
-            key=f"slider_{case_id}_{part}",
-            label_visibility="collapsed",
-        ) * 60
-        st.session_state[key] = playhead
-
-        if playing:
-            @st.fragment(run_every=TICK_SECONDS)
-            def _advance() -> None:
-                nxt = st.session_state[key] + PLAYHEAD_STEP_S
-                st.session_state[key] = part_start if nxt > part_end else nxt
-
-            _advance()
-
     st.altair_chart(
-        build_timeline(case, metrics, deviations, part, playhead),
-        width="stretch",
+        build_timeline(case, metrics, deviations, part), width="stretch"
     )
 
     st.subheader("Flagged moments")
@@ -243,9 +203,8 @@ def render_session(case_id: str) -> None:
     analyze = _load_analyzer()
 
     for i, dev in enumerate(here):
-        reached = playhead is None or dev.start_s <= playhead
         window = f"{dev.start_s / 60:.1f}–{dev.end_s / 60:.1f} min"
-        label = f"{'' if reached else '· '}{dev.rule_id} — {dev.step} — {window}"
+        label = f"{dev.rule_id} — {dev.step} — {window}"
         with st.expander(label, expanded=False):
             st.write(f"**Evidence.** {dev.evidence}")
             st.caption(f"score {dev.score} · an efficiency observation, not a clinical finding")
@@ -355,8 +314,6 @@ def main() -> None:
     st.sidebar.caption(
         f"{len(prepared)} prepared for the lab, {len(others)} others available"
     )
-    if not REPLAY_ENABLED:
-        st.sidebar.caption("Replay disabled (LAB_REPLAY=0)")
 
     session, coach, auditor = st.tabs(["Session", "Coach", "Auditor"])
     with session:
