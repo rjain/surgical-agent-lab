@@ -216,7 +216,10 @@ def check_vertex(enabled: bool) -> None:
         record(SKIP, "Vertex AI reachable", "pass --cloud to run this")
         return
     project = active_project()
-    location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
+    # Gemini 3.x is served only from the `global` endpoint on Vertex; asking a
+    # regional endpoint for it returns 404 NOT_FOUND, which reads like a
+    # permissions problem and is not one.
+    location = os.environ.get("GOOGLE_CLOUD_LOCATION", "global")
     expected = os.environ.get("LAB_PROJECT_ID", "").strip()
     if expected and project != expected:
         record(
@@ -225,22 +228,28 @@ def check_vertex(enabled: bool) -> None:
             f"refusing to bill {project}; fix the project first",
         )
         return
-    model = os.environ.get("LAB_MODEL", "gemini-flash-latest")
+    model = os.environ.get("LAB_MODEL", "gemini-3.5-flash")
     try:
         from google import genai
 
         client = genai.Client(vertexai=True, project=project, location=location)
         reply = client.models.generate_content(model=model, contents="Reply with OK.")
         text = (getattr(reply, "text", "") or "").strip()[:20]
-        record(PASS, "Vertex AI reachable", f"{model} replied {text!r}")
+        record(PASS, "Vertex AI reachable", f"{model} @ {location} replied {text!r}")
     except Exception as exc:
-        record(
-            FAIL,
-            "Vertex AI reachable",
-            f"{type(exc).__name__}: {str(exc)[:110]}",
-            "check the project id, that the Vertex AI API is enabled, and that "
-            "your network allows googleapis.com",
-        )
+        detail = f"{type(exc).__name__}: {str(exc)[:100]}"
+        if "404" in str(exc) or "NOT_FOUND" in str(exc):
+            fix = (
+                f"{model} is not served from {location!r}. Gemini 3.x is only on "
+                "the 'global' endpoint — set GOOGLE_CLOUD_LOCATION=global, or use "
+                "gemini-2.5-flash for a regional endpoint."
+            )
+        else:
+            fix = (
+                "check the project id, that the Vertex AI API is enabled, and "
+                "that your network allows googleapis.com"
+            )
+        record(FAIL, "Vertex AI reachable", detail, fix)
 
 
 def check_dataset() -> None:
