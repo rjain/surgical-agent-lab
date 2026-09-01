@@ -12,13 +12,29 @@ discussing. Built in three labs.
 ```bash
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env                                # then fill it in
-export LAB_DATA_DIR=/path/to/labels                 # folder holding case_* directories
 python preflight.py                                 # add --cloud once you have credentials
 ```
 
 `preflight.py` prints a report to send back to the instructors. Run it when you
 get your credentials, not on the day.
+
+### Where the data goes
+
+Put the dataset at **`data/labels/`** inside this repository — so that
+`data/labels/case_045/tasks.csv` exists — and nothing needs configuring.
+
+If you keep it elsewhere, set `LAB_DATA_DIR` either in a `.env` file (copy
+`.env.example`) or as an environment variable. The lookup order is:
+
+1. `LAB_DATA_DIR`, from the real environment or from `.env`
+2. `data/labels` inside this repository
+3. `data/labels` relative to wherever you ran the command
+
+`lab/data.py` reads `.env` itself rather than relying on the editor. Editors
+disagree about this — VS Code and Antigravity load `.env` for Run and Debug but
+**not** for their integrated terminal, and Streamlit never reads one — so doing
+it in code means the setting behaves the same however you start things. A real
+environment variable still wins over the file.
 
 ## Opening this in Antigravity
 

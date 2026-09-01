@@ -34,11 +34,58 @@ from pathlib import Path
 
 import pandas as pd
 
-# Where the label CSVs live. Override with LAB_DATA_DIR if your copy is
-# somewhere else.
 import os
 
-DATA_DIR = Path(os.environ.get("LAB_DATA_DIR", "data/labels"))
+#: The repository root, so paths do not depend on where you ran the command from.
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _load_dotenv() -> None:
+    """Read ``.env`` from the repository root into the environment.
+
+    Editors disagree about this: a ``.env`` file is picked up by VS Code and
+    Antigravity when you use Run and Debug, but *not* by their integrated
+    terminal, and Streamlit never reads one. Doing it here means the settings
+    behave the same however you start the app — terminal, debugger, Streamlit
+    or pytest.
+
+    Real environment variables always win, so exporting one still overrides
+    the file.
+    """
+    env_file = REPO_ROOT / ".env"
+    if not env_file.exists():
+        return
+    for line in env_file.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key, value = key.strip(), value.strip().strip("'\"")
+        if key and key not in os.environ:
+            os.environ[key] = value
+
+
+_load_dotenv()
+
+
+def _resolve_data_dir() -> Path:
+    """Where the ``case_*`` directories live.
+
+    Looks in three places, in order: the ``LAB_DATA_DIR`` setting, then
+    ``data/labels`` beside this repository, then ``data/labels`` under the
+    current directory. You only need to set anything if your copy of the data
+    lives somewhere unusual.
+    """
+    configured = os.environ.get("LAB_DATA_DIR")
+    if configured:
+        return Path(configured).expanduser()
+    beside_repo = REPO_ROOT / "data" / "labels"
+    if beside_repo.exists():
+        return beside_repo
+    return Path("data/labels")
+
+
+DATA_DIR = _resolve_data_dir()
 
 _CLOCK = re.compile(r"^\s*(\d+):(\d{1,2}):(\d{1,2}(?:\.\d+)?)\s*$")
 
