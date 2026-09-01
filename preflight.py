@@ -213,7 +213,7 @@ def check_project() -> None:
 
 def check_vertex(enabled: bool) -> None:
     if not enabled:
-        record(SKIP, "Vertex AI reachable", "pass --cloud to run this")
+        record(SKIP, "Model endpoint reachable", "pass --cloud to run this")
         return
     project = active_project()
     # Gemini 3.x is served only from the `global` endpoint on Vertex; asking a
@@ -224,7 +224,7 @@ def check_vertex(enabled: bool) -> None:
     if expected and project != expected:
         record(
             SKIP,
-            "Vertex AI reachable",
+            "Model endpoint reachable",
             f"refusing to bill {project}; fix the project first",
         )
         return
@@ -235,7 +235,7 @@ def check_vertex(enabled: bool) -> None:
         client = genai.Client(vertexai=True, project=project, location=location)
         reply = client.models.generate_content(model=model, contents="Reply with OK.")
         text = (getattr(reply, "text", "") or "").strip()[:20]
-        record(PASS, "Vertex AI reachable", f"{model} @ {location} replied {text!r}")
+        record(PASS, "Model endpoint reachable", f"{model} @ {location} replied {text!r}")
     except Exception as exc:
         detail = f"{type(exc).__name__}: {str(exc)[:100]}"
         if "404" in str(exc) or "NOT_FOUND" in str(exc):
@@ -249,7 +249,7 @@ def check_vertex(enabled: bool) -> None:
                 "check the project id, that the Vertex AI API is enabled, and "
                 "that your network allows googleapis.com"
             )
-        record(FAIL, "Vertex AI reachable", detail, fix)
+        record(FAIL, "Model endpoint reachable", detail, fix)
 
 
 def check_dataset() -> None:
