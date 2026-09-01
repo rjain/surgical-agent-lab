@@ -145,29 +145,66 @@ def check_adc() -> None:
         )
 
 
+def _gcloud(*args: str) -> str:
+    if not shutil.which("gcloud"):
+        return ""
+    try:
+        out = subprocess.run(
+            ["gcloud", *args], capture_output=True, text=True, timeout=30
+        )
+        value = out.stdout.strip()
+        return "" if value in ("", "(unset)") else value
+    except Exception:
+        return ""
+
+
+def active_project() -> str:
+    """The project the SDKs will actually use."""
+    return os.environ.get("GOOGLE_CLOUD_PROJECT") or _gcloud(
+        "config", "get-value", "project"
+    )
+
+
 def check_project() -> None:
-    project = os.environ.get("GOOGLE_CLOUD_PROJECT")
-    if not project and shutil.which("gcloud"):
-        try:
-            out = subprocess.run(
-                ["gcloud", "config", "get-value", "project"],
-                capture_output=True,
-                text=True,
-                timeout=30,
-            )
-            candidate = out.stdout.strip()
-            if candidate and candidate != "(unset)":
-                project = candidate
-        except Exception:
-            pass
-    if project:
-        record(PASS, "Cloud project", project)
-    else:
+    """Confirm the project is set — and that it is the *right* one.
+
+    Most developers already have gcloud configured for something else. Without
+    the expected value to compare against, this check would go green while
+    pointing at a personal project, and ``--cloud`` would bill that project
+    instead of the training one.
+    """
+    project = active_project()
+    account = _gcloud("config", "get-value", "account")
+    expected = os.environ.get("LAB_PROJECT_ID", "").strip()
+    who = f"{project} ({account})" if account else project
+
+    if not project:
         record(
             FAIL,
             "Cloud project",
             "not set",
             "gcloud config set project <the project id in your welcome email>",
+        )
+        return
+
+    if not expected:
+        record(
+            PASS,
+            "Cloud project",
+            f"{who} — not verified, LAB_PROJECT_ID unset",
+        )
+        return
+
+    if project == expected:
+        record(PASS, "Cloud project", who)
+    else:
+        record(
+            FAIL,
+            "Cloud project",
+            f"using {who}, expected {expected}",
+            f"gcloud config set project {expected}   "
+            f"(and check `gcloud config configurations list` — you may be on "
+            f"another configuration)",
         )
 
 
@@ -178,8 +215,16 @@ def check_vertex(enabled: bool) -> None:
     if not enabled:
         record(SKIP, "Vertex AI reachable", "pass --cloud to run this")
         return
-    project = os.environ.get("GOOGLE_CLOUD_PROJECT")
+    project = active_project()
     location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
+    expected = os.environ.get("LAB_PROJECT_ID", "").strip()
+    if expected and project != expected:
+        record(
+            SKIP,
+            "Vertex AI reachable",
+            f"refusing to bill {project}; fix the project first",
+        )
+        return
     model = os.environ.get("LAB_MODEL", "gemini-flash-latest")
     try:
         from google import genai
@@ -262,6 +307,14 @@ def main() -> int:
         help="also make one real Vertex AI call (costs a fraction of a cent)",
     )
     args = parser.parse_args()
+
+    # data.py reads .env, so LAB_PROJECT_ID from there is picked up here too.
+    try:
+        from lab.data import _load_dotenv
+
+        _load_dotenv()
+    except Exception:
+        pass
 
     print(f"Surgical Agent Lab — preflight on {platform.platform()}\n")
     check_python()
