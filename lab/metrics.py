@@ -25,7 +25,7 @@ import pandas as pd
 from lab.data import Case, list_cases, load_case, tool_changes_within
 
 # Median duration per task step across the whole corpus, precomputed by
-# tools/build_cohort.py so participants do not wait on 155 cases at import.
+# the instructor pipeline so participants do not wait on 155 cases at import.
 _COHORT_PATH = Path(__file__).with_name("cohort.json")
 
 

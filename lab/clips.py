@@ -31,7 +31,7 @@ from pathlib import Path
 
 from lab.config import REPO_ROOT, client
 
-#: Written by tools/upload_clips.py, committed so participants inherit the URIs.
+#: Written by the instructor pipeline, committed so you inherit the URIs.
 MANIFEST_PATH = REPO_ROOT / "lab" / "clips.json"
 
 #: Where local copies live, if they were distributed.
