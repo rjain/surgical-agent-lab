@@ -107,10 +107,13 @@ def check_api_key() -> None:
     """The one credential the lab needs."""
     key = env.api_key()
     if not key:
+        # Keys are handed out on the day, so an empty one before then is
+        # expected rather than broken. Everything else in this report still
+        # tells you whether the machine is ready.
         record(
-            FAIL, "Gemini API key", f"{env.KEY_VAR} not set",
-            "put it in .env at the repository root, then re-run. "
-            "Get a key from https://aistudio.google.com/apikey",
+            WARN, "Gemini API key", f"{env.KEY_VAR} not set yet",
+            "expected if you have not been given a key. Paste it into .env on "
+            "the day and re-run this — it takes thirty seconds",
         )
         return
     if len(key) < 20:
@@ -136,7 +139,10 @@ def check_model_call(enabled: bool) -> None:
         record(SKIP, "Model endpoint reachable", "pass --cloud to run this")
         return
     if not env.api_key():
-        record(SKIP, "Model endpoint reachable", "no API key to test with")
+        record(
+            SKIP, "Model endpoint reachable",
+            "no key yet — re-run once you have one",
+        )
         return
     model = env.model()
     try:
