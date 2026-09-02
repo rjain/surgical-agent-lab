@@ -6,7 +6,10 @@
       "type": "debugpy",
       "request": "launch",
       "module": "streamlit",
-      "args": ["run", "ui/app.py"],
+      "args": [
+        "run",
+        "ui/app.py"
+      ],
       "console": "integratedTerminal",
       "justMyCode": false
     },
@@ -18,11 +21,13 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "Preflight (--cloud, makes one model call)",
+      "name": "Preflight (--spend, instructors, billed)",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/preflight.py",
-      "args": ["--cloud"],
+      "args": [
+        "--spend"
+      ],
       "console": "integratedTerminal"
     },
     {

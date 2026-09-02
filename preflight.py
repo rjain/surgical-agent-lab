@@ -10,10 +10,12 @@ report at the bottom is what you send back to the instructors — copy the whole
 thing, including the failures. A failure found today takes two minutes to fix;
 the same failure on the day costs the room fifteen.
 
-The one check that costs anything is skipped unless you pass ``--cloud``.
-Run the full set at least once::
+**Nothing here spends a token.** The one check that touches the API lists the
+available models, which is free — enough to prove your network reaches Google,
+that TLS inspection has not broken the SDK, and that your key works.
 
-    python preflight.py --cloud
+Instructors funding the keys can add ``--spend`` to make one real billed call
+and confirm a key has credit on it. Participants never need that.
 """
 
 from __future__ import annotations
@@ -128,50 +130,86 @@ def check_api_key() -> None:
 # --- 5-7: the things that actually fail on a locked-down machine -----------
 
 
-def check_model_call(enabled: bool) -> None:
-    """One real call. The only check that proves the key actually works.
+def check_api_reachable() -> None:
+    """Reach the API and confirm the model exists. Costs nothing.
 
-    A key can be present, correctly formatted and still unusable — most often
-    because its credit has run out, which returns a 429 that says nothing about
-    this lab unless you read it carefully.
+    Listing models is a free operation, which is the whole point: this runs on
+    every machine before the day without spending a token, and it still proves
+    the three things that actually go wrong — the network reaches
+    generativelanguage.googleapis.com, corporate TLS inspection has not broken
+    the SDK's certificate chain, and the key authenticates.
+
+    It does not prove the key has credit or quota. That is deliberate: funding
+    is the instructors' problem, not something to discover from twenty-five
+    machines.
     """
-    if not enabled:
-        record(SKIP, "Model endpoint reachable", "pass --cloud to run this")
-        return
     if not config.api_key():
         record(
-            SKIP, "Model endpoint reachable",
-            "no key yet — re-run once you have one",
+            SKIP, "API reachable", "no key yet — re-run once you have one"
         )
+        return
+    wanted = config.model()
+    try:
+        names = {
+            (m.name or "").split("/")[-1] for m in config.client().models.list()
+        }
+    except Exception as exc:
+        record(
+            FAIL,
+            "API reachable",
+            f"{type(exc).__name__}: {str(exc)[:100]}",
+            config.explain_api_error(exc),
+        )
+        return
+
+    if wanted in names:
+        record(PASS, "API reachable", f"{len(names)} models listed, {wanted} among them")
+    else:
+        close = sorted(n for n in names if "flash" in n)[:3]
+        record(
+            FAIL,
+            "API reachable",
+            f"reached the API, but {wanted} is not offered to this key",
+            f"set LAB_MODEL in .env to one that is, e.g. {', '.join(close) or 'see aistudio.google.com'}",
+        )
+
+
+def check_generation(enabled: bool) -> None:
+    """Make one real, billed call. Instructors only.
+
+    Participants never need this — everything above is free. It exists so
+    whoever funds the keys can confirm one works end to end before handing it
+    out, which is the check that catches an unfunded key.
+    """
+    if not enabled:
+        record(SKIP, "Generation (billed)", "instructors: pass --spend to run this")
+        return
+    if not config.api_key():
+        record(SKIP, "Generation (billed)", "no key to test with")
         return
     model = config.model()
     try:
-        client = config.client()
-        reply = client.models.generate_content(model=model, contents="Reply with OK.")
+        reply = config.client().models.generate_content(
+            model=model, contents="Reply with OK."
+        )
         text = (getattr(reply, "text", "") or "").strip()[:20]
-        record(PASS, "Model endpoint reachable", f"{model} replied {text!r}")
+        record(PASS, "Generation (billed)", f"{model} replied {text!r}")
     except Exception as exc:
         text = str(exc)
-        depleted = "RESOURCE_EXHAUSTED" in text and (
+        if "RESOURCE_EXHAUSTED" in text and (
             "credit" in text.lower() or "billing" in text.lower()
-        )
-        if depleted:
-            # Worth separating from a broken setup. The API resolves the model
-            # id *before* it checks billing — a nonsense model id returns 404,
-            # not this — so reaching the billing check proves the install, the
-            # client, the network, the key and the model id are all correct.
-            # The only missing thing is money on the key.
+        ):
             record(
                 WARN,
-                "Model endpoint reachable",
+                "Generation (billed)",
                 f"{model} resolved; key has no credit",
-                "your setup is correct — the key needs credit before the "
-                "session: https://aistudio.google.com/ (Billing)",
+                "the key needs funding before it is handed to a participant: "
+                "https://aistudio.google.com/ (Billing)",
             )
             return
         record(
             FAIL,
-            "Model endpoint reachable",
+            "Generation (billed)",
             f"{type(exc).__name__}: {str(exc)[:100]}",
             config.explain_api_error(exc),
         )
@@ -236,9 +274,10 @@ def check_port() -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--cloud",
+        "--spend",
         action="store_true",
-        help="also make one real model call (costs a fraction of a cent)",
+        help="instructors only: also make one real, billed call to confirm a "
+        "key is funded. Participants never need this.",
     )
     args = parser.parse_args()
 
@@ -249,10 +288,11 @@ def main() -> int:
     check_virtualenv()
     check_packages()
     check_api_key()
-    check_model_call(args.cloud)
+    check_api_reachable()
     check_dataset()
     check_pipeline_end_to_end()
     check_port()
+    check_generation(args.spend)
 
     failed = [r for r in _results if r[0] == FAIL]
     skipped = [r for r in _results if r[0] == SKIP]

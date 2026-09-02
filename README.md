@@ -13,7 +13,7 @@ discussing. Built in three labs.
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 cp .env.example .env                                # then paste your API key into it
-python preflight.py --cloud
+python preflight.py
 ```
 
 That is the whole setup. **No gcloud, no cloud project, no sign-in** — the lab
@@ -23,10 +23,13 @@ authenticates with a single Gemini API key. Get one from
 `preflight.py` prints a report to send back to the instructors. Run it when you
 get your key, not on the day.
 
-> **The key needs credit on it.** A key with none looks fine everywhere until
-> the first real call, which fails with a `429` about prepayment credits.
-> `preflight.py --cloud` is what catches that, which is why it is worth running
-> at least once.
+> **Nothing in the pre-flight spends a token.** The one check that touches the
+> API lists the available models, which is free — enough to prove your network
+> reaches Google, that corporate TLS inspection has not broken the SDK, that
+> your key works, and that the model the lab uses is offered to it.
+>
+> Instructors funding the keys use `preflight.py --spend` to make one real
+> billed call and confirm a key has credit. You do not need that.
 
 ### Settings
 
@@ -77,7 +80,7 @@ Run targets under `Run and Debug`:
 |---|---|
 | Run the lab interface | Streamlit on `ui/app.py` |
 | Preflight | local checks only |
-| Preflight (`--cloud`) | adds one real model call |
+| Preflight (`--spend`) | instructors only: one billed call, to confirm a key is funded |
 | Evaluate the rules | what the rules find, per case |
 
 `AGENTS.md` orients the IDE's agent: what is supplied, what you write, and the
