@@ -15,7 +15,7 @@ Run it with::
     streamlit run ui/app.py
 
 The Explain action on each flagged moment calls *your* ``analyze_clip`` from
-``lab/cp1_analyze.py``. Until you write it, it reports that it is not wired up
+``lab/lab2_analyze.py``. Until you write it, it reports that it is not wired up
 yet — that is expected, not a bug.
 """
 
@@ -56,7 +56,7 @@ st.set_page_config(page_title="Surgical Workflow Deviation Auditor", layout="wid
 
 def _load_analyzer():
     try:
-        from lab.cp1_analyze import analyze_clip
+        from lab.lab2_analyze import analyze_clip
 
         return analyze_clip
     except Exception:
@@ -217,7 +217,7 @@ def render_session(case_id: str) -> None:
             if st.button("Explain this moment", key=f"explain_{part}_{i}"):
                 if analyze is None:
                     st.warning(
-                        "`lab/cp1_analyze.py` is not written yet — that is Lab 2. "
+                        "`lab/lab2_analyze.py` is not written yet — that is Lab 2. "
                         "Once `analyze_clip` exists, its notes appear here."
                     )
                 else:

@@ -32,7 +32,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
-from lab.cp2_agent import MODEL  # noqa: F401
+from lab.lab3_agent import MODEL  # noqa: F401
 
 
 class Finding(BaseModel):

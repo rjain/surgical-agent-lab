@@ -1,4 +1,4 @@
-"""Smoke tests for the supplied Lab 1 modules.
+"""Smoke tests for the supplied modules — Lab 1, plus the shared plumbing.
 
 These guard the three properties of the raw data that are easy to get wrong,
 plus the shape of what the rules engine returns. Run with::
@@ -174,7 +174,7 @@ def test_schemas_avoid_types_the_api_rejects():
     The request fails while being built, so this is caught before any network
     call — but only if something checks. That something is this test.
     """
-    from lab.cp1_analyze import TechniqueNotes
+    from lab.lab2_analyze import TechniqueNotes
 
     def offending_keys(node, path="") -> list[str]:
         """Find `prefixItems` used as a schema key, not merely mentioned in prose.
@@ -210,7 +210,7 @@ def test_schemas_avoid_types_the_api_rejects():
 
 
 def test_technique_notes_requires_an_honesty_field():
-    from lab.cp1_analyze import TechniqueNotes
+    from lab.lab2_analyze import TechniqueNotes
 
     assert "not_visible" in TechniqueNotes.model_fields
 
@@ -286,8 +286,8 @@ def test_participant_files_still_need_writing():
     Testing a solution locally means overwriting these files. Forgetting to
     restore them would hand every participant the answers.
     """
-    import lab.cp1_analyze as cp1
-    import lab.cp2_agent as cp2
+    import lab.lab2_analyze as cp1
+    import lab.lab3_agent as cp2
 
     with pytest.raises(NotImplementedError):
         cp1.analyze_clip("case_045")

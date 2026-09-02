@@ -23,7 +23,7 @@ decompose is the take-home.
 
 from __future__ import annotations
 
-from lab.cp2_agent import MODEL, TOOLS  # noqa: F401
+from lab.lab3_agent import MODEL, TOOLS  # noqa: F401
 
 
 def build_workflow_tracker():

@@ -12,8 +12,8 @@ Three labs, in order:
 | Lab | File | Who writes it |
 |---|---|---|
 | 1 — Detection | `lab/data.py`, `lab/metrics.py`, `lab/rules.py` | **Supplied, tested. Do not modify.** |
-| 2 — Explanation | `lab/cp1_analyze.py` | The participant |
-| 3 — Application | `lab/cp2_agent.py`, `lab/variants/*.py` | The participant |
+| 2 — Explanation | `lab/lab2_analyze.py` | The participant |
+| 3 — Application | `lab/lab3_agent.py`, `lab/variants/*.py` | The participant |
 
 `ui/app.py` and `preflight.py` are supplied and working.
 

@@ -92,8 +92,8 @@ rules it must not break — chiefly that it must never invent a number.
 | `lab/rules.py` | **supplied, tested** — the deterministic deviation engine |
 | `lab/cohort.json` | corpus medians, built from 155 cases by `tools/build_cohort.py` |
 | `preflight.py` | **working** — ten environment checks |
-| `lab/cp1_analyze.py` | not yet written — Lab 2, the Gemini call |
-| `lab/cp2_agent.py` | not yet written — tools and a single agent |
+| `lab/lab2_analyze.py` | not yet written — Lab 2, the Gemini call |
+| `lab/lab3_agent.py` | not yet written — tools and a single agent |
 | `lab/variants/` | not yet written — Coach and Auditor |
 | `ui/app.py` | not yet written |
 

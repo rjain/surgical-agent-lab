@@ -6,7 +6,7 @@ time, and being stuck for twenty minutes is not.
 
 To use it instead of your own, from the repository root::
 
-    cp solutions/cp1_analyze.py lab/cp1_analyze.py
+    cp solutions/lab2_analyze.py lab/lab2_analyze.py
 
 Three things in here are worth reading even if your own version works:
 
