@@ -251,3 +251,76 @@ def test_a_report_names_the_evidence_under_each_finding(app, finished_auditor):
     review_button(at).click().run()
     captions = " ".join(c.value for c in at.caption)
     assert "Evidence: 23.7 min against 16.5 min" in captions
+
+
+# --------------------------------------------------------------------------
+# preflight's Antigravity check — the IDE the session assumes
+# --------------------------------------------------------------------------
+
+
+def test_the_required_extensions_are_all_on_open_vsx():
+    """Pins the three ids, and pins why Pylance is not among them.
+
+    Antigravity installs from Open VSX only. `ms-python.vscode-pylance` is
+    licensed to official VS Code and returns 404 there, so recommending it
+    produces a prompt twenty-five people cannot satisfy. Verified against
+    open-vsx.org on 2026-09-02: python 200, debugpy 200, pylance 404.
+    """
+    import preflight
+
+    required = set(preflight.ANTIGRAVITY_EXTENSIONS)
+    assert required == {
+        "ms-python.python",
+        "ms-python.debugpy",
+        "detachhead.basedpyright",
+    }
+    assert "ms-python.vscode-pylance" not in required
+    # Each id carries why it is needed; the warning text splices them in, so an
+    # empty one produces a message that tells the reader nothing.
+    assert all(preflight.ANTIGRAVITY_EXTENSIONS.values())
+
+
+def test_the_extension_recommendations_match_what_preflight_checks():
+    """A recommendation the check does not verify, or vice versa, drifts."""
+    import json
+    import re
+
+    import preflight
+
+    raw = (REPO_ROOT / ".vscode" / "extensions.json").read_text()
+    cfg = json.loads(re.sub(r"^\s*//.*$", "", raw, flags=re.M))
+    assert set(cfg["recommendations"]) == set(preflight.ANTIGRAVITY_EXTENSIONS)
+    assert "ms-python.vscode-pylance" in cfg["unwantedRecommendations"]
+
+
+def test_a_missing_ide_is_a_warning_not_a_failure(monkeypatch, tmp_path):
+    """Everything in this lab runs from a terminal, so no IDE cannot fail."""
+    import preflight
+
+    monkeypatch.setattr(preflight.Path, "home", staticmethod(lambda: tmp_path))
+    assert preflight._antigravity_extension_ids() is None
+
+
+def test_extensions_are_read_from_the_manifest_and_the_directory(tmp_path, monkeypatch):
+    """Both routes, because a half-written manifest is a real state."""
+    import json
+
+    import preflight
+
+    root = tmp_path / ".antigravity-ide" / "extensions"
+    root.mkdir(parents=True)
+    monkeypatch.setattr(preflight.Path, "home", staticmethod(lambda: tmp_path))
+
+    # directory-name fallback: publisher.name-version-platform
+    (root / "ms-python.python-2026.4.0-universal").mkdir()
+    assert preflight._antigravity_extension_ids() == {"ms-python.python"}
+
+    # the manifest wins when it parses
+    (root / "extensions.json").write_text(
+        json.dumps([{"identifier": {"id": "detachhead.basedpyright"}}])
+    )
+    assert preflight._antigravity_extension_ids() == {"detachhead.basedpyright"}
+
+    # and a corrupt manifest falls back rather than crashing
+    (root / "extensions.json").write_text("{ not json")
+    assert preflight._antigravity_extension_ids() == {"ms-python.python"}

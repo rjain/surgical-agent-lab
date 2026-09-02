@@ -75,16 +75,43 @@ environment variable still wins over the file.
 
 ## Opening this in Antigravity
 
-Antigravity is the IDE for this session. **Sign in via `Business account` →
-`Continue with Google Cloud` using your training account** — the default
-sign-in path expects a personal Gmail address and will suggest you use one.
-Do not: your training account is not a Gmail account, and moving the lab onto a
-personal account defeats the disposable environment.
+Antigravity is the IDE for this session. Everything here also works from a
+plain terminal, so nothing below is load-bearing — but the session assumes you
+are in Antigravity, and these are the four things that trip people up.
 
-Then `File → Open Folder` on this directory. `.vscode/` is included, so the
-interpreter, test discovery and run targets are picked up automatically once
-the virtual environment exists — create it *before* opening the folder, or
-reload the window afterwards.
+**You sign in with your own account.** Antigravity's login is yours, not
+something issued for the lab. The API key we send you is *not* a login: it goes
+in `.env` and is what your code uses to call Gemini. Two Google-adjacent
+credentials doing two unrelated jobs, and confusing them costs ten minutes.
+
+**Trust the folder when it asks.** A freshly cloned repository opens in
+Restricted Mode, which silently disables the debugger and the run targets. If
+`Run and Debug` does nothing, this is why — click **Trust** in the banner, or
+`File → Trust Folder`.
+
+**Create the virtual environment before you open the folder**, or reload the
+window afterwards (`Developer: Reload Window`). The interpreter is found by
+auto-discovery rather than a hard-coded path, because a hard-coded one is wrong
+on Windows. If it does not pick up `.venv`, run **`Python: Select Interpreter`**
+and choose it.
+
+**Take the three extension recommendations.** Antigravity installs from Open
+VSX, so the ids in `.vscode/extensions.json` were checked against it:
+
+| Extension | Why |
+|---|---|
+| `ms-python.python` | Python language support |
+| `ms-python.debugpy` | the debugger every `Run and Debug` target uses |
+| `detachhead.basedpyright` | completions |
+
+Open the folder and accept the prompt, or install them from the Extensions
+panel. **`python preflight.py` checks all three** and names any that are
+missing, so you do not have to remember this.
+
+**Pylance is not on Open VSX** — Microsoft licenses it to official VS Code
+only, and Antigravity answers `Extension 'ms-python.vscode-pylance' not found`.
+Do not go looking for it. basedpyright does that job here, with type checking
+turned off so you see your own mistakes rather than its opinions about pandas.
 
 Run targets under `Run and Debug`:
 
@@ -97,11 +124,19 @@ Run targets under `Run and Debug`:
 | Preflight (`--spend`) | instructors only: one billed call, to confirm a key is funded |
 | Evaluate the rules | what the rules find, per case |
 
-The two setup targets are there so the whole path works without touching a
+The two setup targets exist so the whole path works without touching a
 terminal — worth knowing if `source .venv/bin/activate` is where you get stuck.
 
-`AGENTS.md` orients the IDE's agent: what is supplied, what you write, and the
-rules it must not break — chiefly that it must never invent a number.
+### The agent, and one rule for it
+
+`AGENTS.md` orients the IDE's agent: what is supplied, what you write, the
+traps in the data, and the rules it must not break — chiefly that it must never
+invent a number. Antigravity reads it at the workspace root (it also reads
+`GEMINI.md` and `.agents/rules`, and shows each as its own source).
+
+**Do not paste your API key into the agent chat.** The agent already reads your
+workspace, including `.env`, so it has no need of the key quoted at it — and
+pasted secrets end up in transcripts and commits, which outlive the key.
 
 ## Preparing the data (instructors only)
 

@@ -1,3 +1,16 @@
 {
-  "recommendations": ["ms-python.python", "ms-python.vscode-pylance"]
+  // Antigravity installs from Open VSX, not the Microsoft marketplace. Every id
+  // below was checked against open-vsx.org and is available there.
+  //
+  // ms-python.vscode-pylance is NOT — Microsoft licenses it to official VS Code
+  // only, so recommending it here produces a prompt that cannot be satisfied.
+  // basedpyright provides the completions instead.
+  "recommendations": [
+    "ms-python.python",
+    "ms-python.debugpy",
+    "detachhead.basedpyright"
+  ],
+  "unwantedRecommendations": [
+    "ms-python.vscode-pylance"
+  ]
 }

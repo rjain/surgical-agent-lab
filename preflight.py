@@ -10,6 +10,12 @@ report at the bottom is what you send back to the instructors — copy the whole
 thing, including the failures. A failure found today takes two minutes to fix;
 the same failure on the day costs the room fifteen.
 
+Nine checks: Python version, virtual environment, packages, API key, network
+reach to the API, dataset, the detection pipeline end to end, the Streamlit
+port, and **the Antigravity extensions the Run and Debug targets need**. The
+last one is a warning rather than a failure — the IDE is what the session
+assumes, but everything here also runs from a terminal.
+
 **Nothing here spends a token.** The one check that touches the API lists the
 available models, which is free — enough to prove your network reaches Google,
 that TLS inspection has not broken the SDK, and that your key works.
@@ -22,6 +28,7 @@ from __future__ import annotations
 
 import argparse
 import importlib
+import json
 import os
 import platform
 import socket
@@ -263,6 +270,76 @@ def check_pipeline_end_to_end() -> None:
 # --- 8: the local web server -----------------------------------------------
 
 
+#: Extension ids the lab's run targets and completions depend on. All three are
+#: on Open VSX, which is the only gallery Antigravity installs from. Pylance is
+#: deliberately absent: Microsoft licenses it to official VS Code only, so it
+#: cannot be installed here at all.
+ANTIGRAVITY_EXTENSIONS = {
+    "ms-python.python": "Python language support",
+    "ms-python.debugpy": "the debugger the Run and Debug targets use",
+    "detachhead.basedpyright": "completions, since Pylance is unavailable",
+}
+
+
+def _antigravity_extension_ids() -> set[str] | None:
+    """Extension ids Antigravity has installed, or None if it is not installed.
+
+    Read off disk rather than by launching the IDE: ``extensions.json`` in the
+    user extensions directory is the same manifest the IDE maintains, and
+    reading it costs nothing. ``Path.home()`` keeps this working on Windows,
+    where the directory sits under the user profile.
+    """
+    root = Path.home() / ".antigravity-ide" / "extensions"
+    if not root.is_dir():
+        return None
+    manifest = root / "extensions.json"
+    ids: set[str] = set()
+    if manifest.is_file():
+        try:
+            for entry in json.loads(manifest.read_text()):
+                identifier = entry.get("identifier", {}).get("id")
+                if identifier:
+                    ids.add(identifier.lower())
+        except (ValueError, OSError):
+            pass  # fall through to the directory listing
+    if not ids:
+        # Directory names are `publisher.name-version-platform`.
+        for child in root.iterdir():
+            if child.is_dir() and "." in child.name:
+                ids.add(child.name.rsplit("-", 2)[0].lower())
+    return ids
+
+
+def check_antigravity() -> None:
+    """Antigravity and the three extensions the run targets need.
+
+    Never a failure. Antigravity is the IDE the session assumes, but every part
+    of this lab runs from a terminal, so a missing extension is something to
+    fix before Tuesday rather than something that stops you working.
+    """
+    installed = _antigravity_extension_ids()
+    if installed is None:
+        record(
+            WARN, "Antigravity", "not installed, or never opened",
+            "install it and open this folder once, then re-run. Everything "
+            "here also works from a terminal, so this is not a blocker",
+        )
+        return
+
+    missing = [e for e in ANTIGRAVITY_EXTENSIONS if e.lower() not in installed]
+    if not missing:
+        record(PASS, "Antigravity extensions", f"all {len(ANTIGRAVITY_EXTENSIONS)} present")
+        return
+    record(
+        WARN,
+        "Antigravity extensions",
+        f"{len(missing)} missing: {', '.join(missing)}",
+        "open this folder in Antigravity and accept the recommended "
+        "extensions, or install them from the Extensions panel. Needed for "
+        + "; ".join(ANTIGRAVITY_EXTENSIONS[e] for e in missing),
+    )
+
+
 def check_port() -> None:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -300,6 +377,7 @@ def main() -> int:
     check_dataset()
     check_pipeline_end_to_end()
     check_port()
+    check_antigravity()
     check_generation(args.spend)
 
     failed = [r for r in _results if r[0] == FAIL]
