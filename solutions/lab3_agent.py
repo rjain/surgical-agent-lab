@@ -17,26 +17,38 @@ one in the skeleton::
         \"\"\"
 
 Both wrap the same working function. Asked *"where did I lose the most time in
-case_045?"*, this is what actually happened on one run:
+case_045?"* four times each, the difference is in how the agent gets there:
 
-    vague   -> list_deviations(case_045)      # wrong tool first, wasted turn
-               get_metrics(case_045)
-               get_metrics(case_045, "Suturing")
-               ...answered with a raw float: "ratio of 1.12552039966694"
-
-    good    -> get_metrics(case_045)          # straight to the right tool
-               get_metrics(case_045, "Suturing")
-               list_deviations(case_045)
-               ...answered "most time relative to the cohort median during Suturing"
+    run   variant   tool calls   first tool called
+      1   vague              5   list_deviations   <- wrong tool, wasted turn
+      1   good               4   get_metrics
+      2   vague              5   list_deviations   <- again
+      2   good               3   get_metrics
+      3   vague              3   get_metrics
+      3   good               4   get_metrics
+      4   vague             11   get_metrics       <- thrashing
+      4   good               3   get_metrics
 
 Nothing about the body changed. ADK builds the declaration the model sees from
 the signature and the docstring, and never reads the body at all.
 
-Do run both yourself rather than taking the above on trust. Model behaviour
-varies between runs and the difference shows up as *which tool it reaches for
-first* and *how well it phrases the answer*, not as an outright failure. That
-is worth knowing in itself: a bad tool description degrades an agent quietly
-rather than breaking it.
+**Read that table carefully, because the honest lesson is narrower than it
+first looks.** The good docstring is *consistent* — always the right tool
+first, always three or four calls. The vague one is *erratic*: right half the
+time, and on run 4 it made eleven calls to answer one question. Neither ever
+outright failed. A bad tool description does not break an agent; it makes it
+expensive and unpredictable, which is much harder to notice in review and much
+worse in production.
+
+What the docstring does **not** fix is how the answer is phrased. An earlier
+version of this file claimed it did — that the vague agent quoted a raw
+`1.12552039966694` and the good one read it back properly. Measured, both did
+it, every time. That is an *instruction* problem, and it is fixed by the
+rounding line in `INSTRUCTION` above, not by anything in a docstring. Two
+different failure modes with two different remedies, and worth keeping
+straight.
+
+Run it yourself rather than taking the table on trust; the counts vary.
 """
 
 from __future__ import annotations
@@ -55,6 +67,9 @@ sessions. You are a coach looking at practice footage, not a clinician.
 How to answer:
 - Never state a number you did not get from a tool. No estimates, no rounding
   from memory, no "roughly". If you need a figure, call a tool.
+- Report figures the way a person would read them aloud: durations in minutes
+  to one decimal, ratios to two. The tools return full precision; quoting it
+  back ("1.12552039966694x") is noise, not rigour.
 - Cite the step and the timestamp a claim comes from, so it can be checked.
 - Call list_deviations first when asked what went wrong; it tells you where to
   look. Call get_metrics for timings. Call analyze_clip only when someone wants
