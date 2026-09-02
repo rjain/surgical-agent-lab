@@ -80,6 +80,17 @@ Pass `automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=Tr
 Nothing in Lab 2 should call a tool — that is Lab 3's job — so saying so is the
 honest fix rather than muting the log.
 
+**`GOOGLE_GENAI_USE_ENTERPRISE`, not `GOOGLE_GENAI_USE_VERTEXAI`.** The old
+name followed the Vertex AI → Gemini Enterprise rename and both `google-genai`
+and ADK now emit a `DeprecationWarning` for it. `lab/config.py` sets only the
+new name and removes the old one — setting both makes `google-genai` warn again
+if they ever disagree. Every tutorial still shows the old name.
+
+**ADK 2.8 puts tool parameters in `parameters_json_schema`.** The
+`parameters` field on a `FunctionDeclaration` is `None`, so code reaching for
+it gets an `AttributeError` on `None`. This is the `JSON_SCHEMA_FOR_FUNC_DECL`
+experimental feature the warning is about.
+
 **Clamp video offsets to the clip's duration.** An offset past the end returns
 a bare `400 INVALID_ARGUMENT` that names nothing.
 
@@ -149,7 +160,7 @@ directly, you have to handle them yourself — so prefer the loaders.
 ## Checking your work
 
 ```bash
-pytest -q                          # 36 tests; needs no key and spends no tokens
+pytest -q                          # 75 tests; needs no key and spends no tokens
 python preflight.py                # 8 environment checks, none of them billed
 python tools/evaluate_rules.py     # what the rules find, per case
 streamlit run ui/app.py            # the interface

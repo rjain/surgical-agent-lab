@@ -55,10 +55,9 @@ def load_env() -> None:
             if key and key not in os.environ:
                 os.environ[key] = value
 
-    # The SDK and ADK read GOOGLE_API_KEY and GOOGLE_GENAI_USE_VERTEXAI
-    # automatically, which is exactly why the lab key has its own name: a
-    # participant who already works with Gemini has GOOGLE_API_KEY set to their
-    # own key, and it would silently win.
+    # The SDK and ADK read GOOGLE_API_KEY automatically, which is exactly why
+    # the lab key has its own name: a participant who already works with Gemini
+    # has GOOGLE_API_KEY set to their own key, and it would silently win.
     #
     # Assigned, not setdefault. Deferring to whatever is already in the
     # environment is what causes that shadowing — the lab key must win inside
@@ -67,7 +66,16 @@ def load_env() -> None:
     api_key = os.environ.get(KEY_VAR)
     if api_key:
         os.environ["GOOGLE_API_KEY"] = api_key
-    os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "False"
+
+    # GOOGLE_GENAI_USE_ENTERPRISE, not GOOGLE_GENAI_USE_VERTEXAI — the latter
+    # is what every tutorial still shows, and both google-genai and ADK now
+    # warn that it is deprecated. It followed the Vertex AI → Gemini Enterprise
+    # rename. Only the new name is set: both libraries check it first, and
+    # google-genai warns again if it finds the two disagreeing. An older SDK
+    # that has never heard of it defaults to the Gemini API anyway, which is
+    # what this line is asking for.
+    os.environ["GOOGLE_GENAI_USE_ENTERPRISE"] = "False"
+    os.environ.pop("GOOGLE_GENAI_USE_VERTEXAI", None)
 
 
 @lru_cache(maxsize=1)
