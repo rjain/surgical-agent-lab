@@ -155,6 +155,22 @@ The variant tabs in the interface stay dark until the matching file is
 written, then come alive. Under every Coach answer is the list of tools it
 actually called — the only way to tell a measured number from an invented one.
 
+## Licence and the dataset
+
+The code is MIT licensed — see [LICENSE](LICENSE). Clone it, change it, and
+keep whatever you build on it; that includes after the session ends, because
+your working copy is already a git repository and nothing about it depends on
+credentials that expire.
+
+**The dataset is not ours and is not covered by that licence.** `lab.get_data`
+fetches the published SurgVU release from its own public bucket, so the
+dataset's own terms apply to you directly. The clips the lab uses are cut from
+the same release and are not redistributed here.
+
+> **Not a medical device.** Retrospective review of recorded *training
+> exercise* footage, for education. No diagnostic, intraoperative or patient-care
+> claim is made or intended.
+
 ## Three traps in the raw labels
 
 `data.py` handles all three; the tests guard them.
