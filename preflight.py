@@ -124,6 +124,11 @@ def check_api_key() -> None:
             "check for stray quotes or a truncated paste in .env",
         )
         return
+    # Four trailing characters, deliberately: this report gets copied into an
+    # email, and with twenty-five individually-issued keys "which key are you
+    # on?" is a real diagnostic question. Four of 53 characters gives away
+    # nothing useful. Masking the resolved value is safe in a way that
+    # pattern-matching .env is not — see AGENTS.md.
     record(PASS, "Gemini API key", f"set, {len(key)} chars, ending {key[-4:]}")
 
 

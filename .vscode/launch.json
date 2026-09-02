@@ -2,6 +2,20 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Setup: get the dataset",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "lab.get_data",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Setup: set your API key",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "lab.set_key",
+      "console": "integratedTerminal"
+    },
+    {
       "name": "Run the lab interface",
       "type": "debugpy",
       "request": "launch",

@@ -146,9 +146,14 @@ directly, you have to handle them yourself — so prefer the loaders.
   them.
 - **Never quote the API key back to the user, print it, or write it into a
   file.** It lives in `.env`, which is gitignored and chmod 0600. Do not paste
-  it into a chat or a commit: transcripts and history outlive the key. Do not
-  print it masked either — a masking regex that skips a commented-out line has
-  already leaked one key into a transcript, and that key had to be revoked.
+  it into a chat or a commit: transcripts and history outlive the key.
+  **Do not write masking code either.** A regex that scanned `.env` and skipped
+  a commented-out line has already leaked one key into a transcript, and that
+  key had to be revoked. The one exception is deliberate and already written:
+  `preflight.py` reports `key[-4:]` so that instructors handing out
+  twenty-five individually-issued keys can tell which one a participant is on.
+  That masks the *resolved value* rather than pattern-matching a file, which is
+  why it is safe. Do not extend it, and do not add a second one.
 - Video reaches the model through `lab.clips.resolve_clip()`, never a `gs://`
   URI — the Gemini API rejects those. Do not hand-roll uploads: uploaded files
   expire after 48 hours and belong to one project, and `resolve_clip` already

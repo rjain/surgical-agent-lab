@@ -90,10 +90,15 @@ Run targets under `Run and Debug`:
 
 | | |
 |---|---|
+| Setup: get the dataset | `python -m lab.get_data` |
+| Setup: set your API key | `python -m lab.set_key`, hidden prompt |
 | Run the lab interface | Streamlit on `ui/app.py` |
 | Preflight | local checks only |
 | Preflight (`--spend`) | instructors only: one billed call, to confirm a key is funded |
 | Evaluate the rules | what the rules find, per case |
+
+The two setup targets are there so the whole path works without touching a
+terminal — worth knowing if `source .venv/bin/activate` is where you get stuck.
 
 `AGENTS.md` orients the IDE's agent: what is supplied, what you write, and the
 rules it must not break — chiefly that it must never invent a number.
