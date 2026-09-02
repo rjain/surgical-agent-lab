@@ -103,7 +103,7 @@ downloading, about 11.6 GB for six.
 pip install imageio-ffmpeg          # bundles ffmpeg; no system install needed
 python tools/fetch_video.py --list  # 155 cases, curated six marked
 python tools/fetch_video.py --curated
-python tools/cut_clips.py           # 37 clips, ~45 MB, writes lab/clips.json
+python tools/cut_clips.py           # 35 clips, ~45 MB, writes lab/clips.json
 python tools/upload_clips.py        # Files API pre-upload, on the day
 ```
 

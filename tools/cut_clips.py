@@ -126,20 +126,31 @@ def main() -> int:
                 if not target.is_file():
                     cut(exe, source, start, duration, target)
                 size = target.stat().st_size
-                total_bytes += size
-                cut_count += 1
-                print(f"{clip_id:30} {f'{lo:.0f}-{hi:.0f}s':>18} {'ok':>10}  "
-                      f"{size / 1e6:5.1f} MB")
+                if clip_id in manifest:
+                    note = "also flagged here"
+                else:
+                    total_bytes += size
+                    cut_count += 1
+                    note = f"{size / 1e6:5.1f} MB"
+                print(f"{clip_id:30} {f'{lo:.0f}-{hi:.0f}s':>18} {'ok':>10}  {note}")
 
-            manifest[clip_id] = {
-                "case_id": case_id,
-                "part": dev.part,
-                "start_s": round(start, 1),
-                "end_s": round(start + duration, 1),
-                "rule_id": dev.rule_id,
-                "local": f"data/clips/{clip_id}.mp4",
-                "uri": "",
-            }
+            # Two rules can nominate the same window — case_044 does it twice
+            # — which is one clip flagged for two reasons, not two clips. The
+            # id collapses them on purpose; the reasons accumulate.
+            entry = manifest.setdefault(
+                clip_id,
+                {
+                    "case_id": case_id,
+                    "part": dev.part,
+                    "start_s": round(start, 1),
+                    "end_s": round(start + duration, 1),
+                    "rule_ids": [],
+                    "local": f"data/clips/{clip_id}.mp4",
+                    "uri": "",
+                },
+            )
+            if dev.rule_id not in entry["rule_ids"]:
+                entry["rule_ids"].append(dev.rule_id)
 
     if not args.dry_run and manifest:
         MANIFEST_PATH.write_text(

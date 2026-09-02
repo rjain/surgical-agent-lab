@@ -6,7 +6,9 @@
       "part": 1,
       "start_s": 5669.3,
       "end_s": 5719.3,
-      "rule_id": "step_oscillation",
+      "rule_ids": [
+        "step_oscillation"
+      ],
       "local": "data/clips/case_129_p1_5669.mp4",
       "uri": ""
     },
@@ -15,7 +17,9 @@
       "part": 1,
       "start_s": 8570.6,
       "end_s": 8620.6,
-      "rule_id": "step_oscillation",
+      "rule_ids": [
+        "step_oscillation"
+      ],
       "local": "data/clips/case_129_p1_8571.mp4",
       "uri": ""
     },
@@ -24,7 +28,9 @@
       "part": 1,
       "start_s": 17064.3,
       "end_s": 17114.3,
-      "rule_id": "swap_rate",
+      "rule_ids": [
+        "swap_rate"
+      ],
       "local": "data/clips/case_129_p1_17064.mp4",
       "uri": ""
     },
@@ -33,7 +39,9 @@
       "part": 1,
       "start_s": 21698.5,
       "end_s": 21748.5,
-      "rule_id": "step_overrun",
+      "rule_ids": [
+        "step_overrun"
+      ],
       "local": "data/clips/case_129_p1_21699.mp4",
       "uri": ""
     },
@@ -42,8 +50,32 @@
       "part": 1,
       "start_s": 21143.7,
       "end_s": 21193.7,
-      "rule_id": "swap_rate",
+      "rule_ids": [
+        "swap_rate"
+      ],
       "local": "data/clips/case_129_p1_21144.mp4",
+      "uri": ""
+    },
+    "case_036_p2_4437": {
+      "case_id": "case_036",
+      "part": 2,
+      "start_s": 4436.6,
+      "end_s": 4486.6,
+      "rule_ids": [
+        "swap_rate"
+      ],
+      "local": "data/clips/case_036_p2_4437.mp4",
+      "uri": ""
+    },
+    "case_036_p2_3961": {
+      "case_id": "case_036",
+      "part": 2,
+      "start_s": 3961.1,
+      "end_s": 4011.1,
+      "rule_ids": [
+        "unknown_instrument"
+      ],
+      "local": "data/clips/case_036_p2_3961.mp4",
       "uri": ""
     }
   }
