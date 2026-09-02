@@ -277,6 +277,26 @@ def test_every_flag_nominates_a_watchable_window():
             )
 
 
+# --- the skeletons must stay skeletons --------------------------------------
+
+
+def test_participant_files_still_need_writing():
+    """Guards against a reference solution being copied in and committed.
+
+    Testing a solution locally means overwriting these files. Forgetting to
+    restore them would hand every participant the answers.
+    """
+    import lab.cp1_analyze as cp1
+    import lab.cp2_agent as cp2
+
+    with pytest.raises(NotImplementedError):
+        cp1.analyze_clip("case_045")
+    with pytest.raises(NotImplementedError):
+        cp1.validate(None, 0.0, 1.0)
+    with pytest.raises(NotImplementedError):
+        cp2.build_agent()
+
+
 def test_the_dataset_is_actually_present():
     cases = list_cases()
     assert len(cases) > 0, "no cases found — is LAB_DATA_DIR set correctly?"

@@ -268,11 +268,23 @@ def find_deviations(case_id: str) -> list[Deviation]:
 def list_deviations(case_id: str) -> list[dict]:
     """Flagged moments in a recorded session, worth a reviewer's attention.
 
-    Each entry gives the step, the time window, which rule fired, and the
-    measurement behind it. These are efficiency observations about a training
-    exercise, not clinical findings.
+    Each entry gives the task step, which rule fired, the measurement behind
+    it, and the stretch of footage worth watching. Pass ``watch_start_s`` and
+    ``watch_end_s`` straight to the clip analyser to see what happened — the
+    full ``start_s`` to ``end_s`` span is the whole task step and far too long
+    to look at.
+
+    These are efficiency observations about a recorded training exercise, not
+    clinical findings.
 
     Args:
         case_id: the session identifier, e.g. ``"case_045"``.
     """
-    return [d.as_dict() for d in find_deviations(case_id)]
+    out = []
+    for dev in find_deviations(case_id):
+        entry = dev.as_dict()
+        watch_start, watch_end = dev.watch_window
+        entry["watch_start_s"] = round(watch_start, 1)
+        entry["watch_end_s"] = round(watch_end, 1)
+        out.append(entry)
+    return out
