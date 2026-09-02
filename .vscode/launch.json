@@ -35,21 +35,11 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "Preflight (--spend, instructors, billed)",
-      "type": "debugpy",
-      "request": "launch",
-      "program": "${workspaceFolder}/preflight.py",
-      "args": [
-        "--spend"
-      ],
-      "console": "integratedTerminal"
-    },
-    {
       "name": "Evaluate the rules",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/tools/evaluate_rules.py",
-      "console": "integratedTerminal"
+      "console": "integratedTerminal",
+      "module": "lab.evaluate_rules"
     }
   ]
 }

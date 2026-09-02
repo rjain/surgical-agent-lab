@@ -158,8 +158,10 @@ directly, you have to handle them yourself — so prefer the loaders.
   URI — the Gemini API rejects those. Do not hand-roll uploads: uploaded files
   expire after 48 hours and belong to one project, and `resolve_clip` already
   handles both.
-- Everything in `tools/` is instructor-only, with no exceptions. Participant
-  entry points are modules: `python -m lab.get_data`, `python -m lab.set_key`.
+- Participant entry points are modules, all of them: `python -m lab.get_data`,
+  `python -m lab.set_key`, `python -m lab.evaluate_rules`. There is no
+  `tools/` directory — the instructor pipeline that builds the clips and
+  `lab/cohort.json` lives in a separate private repository, deliberately.
 - Tests live in `tests/` and run with `pytest -q`. They must stay green.
 
 ## Checking your work
@@ -167,7 +169,7 @@ directly, you have to handle them yourself — so prefer the loaders.
 ```bash
 pytest -q                          # 75 tests; needs no key and spends no tokens
 python preflight.py                # 8 environment checks, none of them billed
-python tools/evaluate_rules.py     # what the rules find, per case
+python -m lab.evaluate_rules       # what the rules find, per case
 streamlit run ui/app.py            # the interface
 ```
 

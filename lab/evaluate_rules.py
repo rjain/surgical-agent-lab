@@ -6,11 +6,12 @@ curated subset is revisited. A rule that never fires is dead weight in the
 room; a rule that fires on the majority case teaches people the system cries
 wolf. This script is how you tell the difference.
 
-    python tools/evaluate_rules.py              # the curated subset
-    python tools/evaluate_rules.py --all        # every case in the corpus
-    python tools/evaluate_rules.py --candidates # best cases to curate
+    python -m lab.evaluate_rules              # the curated subset
+    python -m lab.evaluate_rules --all        # every case in the corpus
+    python -m lab.evaluate_rules --candidates # best cases to curate
 
-Requires LAB_DATA_DIR to point at the label directory.
+Uses the same dataset the rest of the lab does; run `python -m lab.get_data`
+first if you have not already.
 """
 
 from __future__ import annotations
@@ -20,7 +21,6 @@ import collections
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from lab.data import list_cases, load_case  # noqa: E402
 from lab.rules import RULES, find_deviations  # noqa: E402

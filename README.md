@@ -120,9 +120,8 @@ Run targets under `Run and Debug`:
 | Setup: get the dataset | `python -m lab.get_data` |
 | Setup: set your API key | `python -m lab.set_key`, hidden prompt |
 | Run the lab interface | Streamlit on `ui/app.py` |
-| Preflight | local checks only |
-| Preflight (`--spend`) | instructors only: one billed call, to confirm a key is funded |
-| Evaluate the rules | what the rules find, per case |
+| Preflight | `python preflight.py` |
+| Evaluate the rules | what the rules find, per case — useful for the threshold stretch exercise |
 
 The two setup targets exist so the whole path works without touching a
 terminal — worth knowing if `source .venv/bin/activate` is where you get stuck.
@@ -138,21 +137,17 @@ invent a number. Antigravity reads it at the workspace root (it also reads
 workspace, including `.env`, so it has no need of the key quoted at it — and
 pasted secrets end up in transcripts and commits, which outlive the key.
 
-## Preparing the data (instructors only)
+## Where the clips come from
 
-The published SurgVU archive is a single 344 GB zip, but it is a public Cloud
-Storage object and it stores one video per case — so only the cases we use need
-downloading, about 11.6 GB for six.
+The clips this repository references were cut from the published SurgVU video
+archive — a single 344 GB zip — down to the 40-second window that explains each
+flag. That pipeline is **not in this repository**: it reads raw video nobody
+here needs, it writes the artefacts this repo already ships (`lab/clips.json`,
+`lab/cohort.json`), and keeping it out means everything you can see is
+something you might actually run.
 
-```bash
-pip install imageio-ffmpeg          # bundles ffmpeg; no system install needed
-python tools/fetch_video.py --list  # 155 cases, curated six marked
-python tools/fetch_video.py --curated
-python tools/cut_clips.py           # 35 clips, ~45 MB, writes lab/clips.json
-python tools/upload_clips.py        # Files API pre-upload, on the day
-```
-
-Participants never run any of this. They get the clips, not the source video.
+You get the clips. You never need the source video, `ffmpeg`, or 11.6 GB of
+disk.
 
 ## What is supplied, and what you write
 
