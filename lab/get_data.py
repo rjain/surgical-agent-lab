@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Download the SurgVU labels. Run this once, during setup.
 
-    python tools/fetch_labels.py
+    python -m lab.get_data
 
-This is the one tool participants do run. It pulls the published label
-archive — 335 KB, all 155 cases — and unpacks it to ``data/labels/`` where the
-lab looks for it by default. Takes a couple of seconds.
+Part of setup, not an instructor tool — everything under ``tools/`` is ours
+and you never need it. This pulls the published label archive (335 KB, all
+155 cases) and unpacks it to ``data/labels/``, where the lab looks for it with
+nothing configured. Takes about a second.
 
 Two things worth knowing:
 
@@ -29,9 +30,7 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
-from lab.config import REPO_ROOT  # noqa: E402
+from lab.config import REPO_ROOT
 
 #: The published label release. Verified byte-identical to the copy the lab
 #: was built and measured against.

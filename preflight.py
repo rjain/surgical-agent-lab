@@ -228,7 +228,7 @@ def check_dataset() -> None:
         f"no cases under {DATA_DIR}",
         # One command, 335 KB, about a second. Only mention LAB_DATA_DIR for
         # the rarer case where they already have a copy elsewhere.
-        "run  python tools/fetch_labels.py  — or set LAB_DATA_DIR if you "
+        "run  python -m lab.get_data  — or set LAB_DATA_DIR if you "
         "already have the labels somewhere else",
     )
 

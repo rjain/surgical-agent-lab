@@ -12,8 +12,8 @@ discussing. Built in three labs.
 ```bash
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-python tools/fetch_labels.py                        # the dataset: 335 KB, one second
-cp .env.example .env                                # then paste your API key into it
+python -m lab.get_data                              # the dataset: 335 KB, one second
+python -m lab.set_key                               # paste your key when prompted
 python preflight.py
 ```
 
@@ -21,7 +21,12 @@ That is the whole setup. **No gcloud, no cloud project, no sign-in** — the lab
 authenticates with a single Gemini API key. Get one from
 [aistudio.google.com/apikey](https://aistudio.google.com/apikey).
 
-`fetch_labels.py` downloads the published SurgVU label release from its own
+`lab.set_key` writes your key straight into `.env` from a hidden prompt, so it
+never reaches your screen, your shell history or your clipboard manager. Edit
+`.env` by hand instead if you would rather — `cp .env.example .env` gives you a
+commented template.
+
+`lab.get_data` downloads the published SurgVU label release from its own
 public bucket, so the dataset's terms apply to you directly and nothing has
 been repackaged in between. It is labels only — task segments and instrument
 mounts as CSV. The video clips the lab needs are handled by `lab/clips.py`.
@@ -51,7 +56,7 @@ pytest. Both `KEY=value` and `export KEY="value"` work.
 
 ### Where the data goes
 
-`python tools/fetch_labels.py` puts it at **`data/labels/`** inside this
+`python -m lab.get_data` puts it at **`data/labels/`** inside this
 repository — so that `data/labels/case_045/tasks.csv` exists — and nothing
 needs configuring.
 
@@ -107,8 +112,7 @@ python tools/cut_clips.py           # 35 clips, ~45 MB, writes lab/clips.json
 python tools/upload_clips.py        # Files API pre-upload, on the day
 ```
 
-Participants never run any of this — `tools/fetch_labels.py` is the one tool
-they do run. They get the clips, not the source video.
+Participants never run any of this. They get the clips, not the source video.
 
 ## What is supplied, and what you write
 
