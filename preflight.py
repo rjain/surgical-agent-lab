@@ -316,7 +316,7 @@ def main() -> int:
             "before the session."
         )
     elif skipped:
-        print("Ready, but re-run with --cloud to check the parts that need the network.")
+        print("Ready. The skipped check is the instructors' billed one.")
     else:
         print("Ready. Nothing further to do before the session.")
     print("-" * 68)
