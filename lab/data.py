@@ -40,32 +40,9 @@ import os
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
-def _load_dotenv() -> None:
-    """Read ``.env`` from the repository root into the environment.
+from lab.env import load_env
 
-    Editors disagree about this: a ``.env`` file is picked up by VS Code and
-    Antigravity when you use Run and Debug, but *not* by their integrated
-    terminal, and Streamlit never reads one. Doing it here means the settings
-    behave the same however you start the app — terminal, debugger, Streamlit
-    or pytest.
-
-    Real environment variables always win, so exporting one still overrides
-    the file.
-    """
-    env_file = REPO_ROOT / ".env"
-    if not env_file.exists():
-        return
-    for line in env_file.read_text().splitlines():
-        line = line.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        key, _, value = line.partition("=")
-        key, value = key.strip(), value.strip().strip("'\"")
-        if key and key not in os.environ:
-            os.environ[key] = value
-
-
-_load_dotenv()
+load_env()
 
 
 def _resolve_data_dir() -> Path:

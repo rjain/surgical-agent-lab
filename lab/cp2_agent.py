@@ -19,18 +19,15 @@ which tools were called so you can check it.
 
 from __future__ import annotations
 
-import os
-
+from lab import env
 from lab.cp1_analyze import analyze_clip  # noqa: F401  your Lab 2 work
 from lab.metrics import get_metrics  # noqa: F401  supplied
 from lab.rules import list_deviations  # noqa: F401  supplied
 
-# Verified 2026-09-01 against Vertex AI. Gemini 3.x is served ONLY from the
-# `global` endpoint — a regional endpoint returns 404 for these model ids.
-# gemini-2.5-flash does work regionally, and is roughly 3x faster, but the
-# output_schema-with-tools support that Variant B relies on wants a 3.x model.
-MODEL = os.environ.get("LAB_MODEL", "gemini-3.5-flash")
-LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "global")
+# The lab authenticates with a Gemini API key — no cloud project, no ADC, and
+# no endpoint region to get wrong. `lab.env` reads the key from .env and points
+# ADK at it, so there is nothing to configure twice.
+MODEL = env.model()
 
 #: The three capabilities every variant is built on.
 TOOLS = [get_metrics, list_deviations, analyze_clip]

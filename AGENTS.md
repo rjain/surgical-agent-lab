@@ -57,6 +57,9 @@ directly, you have to handle them yourself — so prefer the loaders.
   from the signature and the docstring, so vague docstrings produce agents that
   pick the wrong tool. Write them as an interface, with an `Args:` block.
 - Pinned dependencies. Do not upgrade anything in `requirements.txt`.
+- Authentication is a **Gemini API key** in `.env`, read through `lab/env.py`.
+  There is no cloud project, no ADC and no endpoint region. Do not reintroduce
+  them, and never print or commit the key.
 - Tests live in `tests/` and run with `pytest -q`. They must stay green.
 
 ## Checking your work

@@ -10,8 +10,8 @@ report at the bottom is what you send back to the instructors — copy the whole
 thing, including the failures. A failure found today takes two minutes to fix;
 the same failure on the day costs the room fifteen.
 
-Checks that spend money or need cloud access are skipped unless you pass
-``--cloud``. Run the full set at least once::
+The one check that costs anything is skipped unless you pass ``--cloud``.
+Run the full set at least once::
 
     python preflight.py --cloud
 """
@@ -27,6 +27,8 @@ import socket
 import subprocess
 import sys
 from pathlib import Path
+
+from lab import env
 
 MIN_PYTHON = (3, 10)
 STREAMLIT_PORT = 8501
@@ -145,111 +147,54 @@ def check_adc() -> None:
         )
 
 
-def _gcloud(*args: str) -> str:
-    if not shutil.which("gcloud"):
-        return ""
-    try:
-        out = subprocess.run(
-            ["gcloud", *args], capture_output=True, text=True, timeout=30
-        )
-        value = out.stdout.strip()
-        return "" if value in ("", "(unset)") else value
-    except Exception:
-        return ""
-
-
-def active_project() -> str:
-    """The project the SDKs will actually use."""
-    return os.environ.get("GOOGLE_CLOUD_PROJECT") or _gcloud(
-        "config", "get-value", "project"
-    )
-
-
-def check_project() -> None:
-    """Confirm the project is set — and that it is the *right* one.
-
-    Most developers already have gcloud configured for something else. Without
-    the expected value to compare against, this check would go green while
-    pointing at a personal project, and ``--cloud`` would bill that project
-    instead of the training one.
-    """
-    project = active_project()
-    account = _gcloud("config", "get-value", "account")
-    expected = os.environ.get("LAB_PROJECT_ID", "").strip()
-    who = f"{project} ({account})" if account else project
-
-    if not project:
+def check_api_key() -> None:
+    """The one credential the lab needs."""
+    key = env.api_key()
+    if not key:
         record(
-            FAIL,
-            "Cloud project",
-            "not set",
-            "gcloud config set project <the project id in your welcome email>",
+            FAIL, "Gemini API key", f"{env.KEY_VAR} not set",
+            "put it in .env at the repository root, then re-run. "
+            "Get a key from https://aistudio.google.com/apikey",
         )
         return
-
-    if not expected:
+    if len(key) < 20:
         record(
-            PASS,
-            "Cloud project",
-            f"{who} — not verified, LAB_PROJECT_ID unset",
+            FAIL, "Gemini API key", f"{env.KEY_VAR} looks too short ({len(key)} chars)",
+            "check for stray quotes or a truncated paste in .env",
         )
         return
-
-    if project == expected:
-        record(PASS, "Cloud project", who)
-    else:
-        record(
-            FAIL,
-            "Cloud project",
-            f"using {who}, expected {expected}",
-            f"gcloud config set project {expected}   "
-            f"(and check `gcloud config configurations list` — you may be on "
-            f"another configuration)",
-        )
+    record(PASS, "Gemini API key", f"set, {len(key)} chars, ending {key[-4:]}")
 
 
 # --- 7-9: the things that actually fail on a corporate network -------------
 
 
-def check_vertex(enabled: bool) -> None:
+def check_model_call(enabled: bool) -> None:
+    """One real call. The only check that proves the key actually works.
+
+    A key can be present, correctly formatted and still unusable — most often
+    because its credit has run out, which returns a 429 that says nothing about
+    this lab unless you read it carefully.
+    """
     if not enabled:
         record(SKIP, "Model endpoint reachable", "pass --cloud to run this")
         return
-    project = active_project()
-    # Gemini 3.x is served only from the `global` endpoint on Vertex; asking a
-    # regional endpoint for it returns 404 NOT_FOUND, which reads like a
-    # permissions problem and is not one.
-    location = os.environ.get("GOOGLE_CLOUD_LOCATION", "global")
-    expected = os.environ.get("LAB_PROJECT_ID", "").strip()
-    if expected and project != expected:
-        record(
-            SKIP,
-            "Model endpoint reachable",
-            f"refusing to bill {project}; fix the project first",
-        )
+    if not env.api_key():
+        record(SKIP, "Model endpoint reachable", "no API key to test with")
         return
-    model = os.environ.get("LAB_MODEL", "gemini-3.5-flash")
+    model = env.model()
     try:
-        from google import genai
-
-        client = genai.Client(vertexai=True, project=project, location=location)
+        client = env.client()
         reply = client.models.generate_content(model=model, contents="Reply with OK.")
         text = (getattr(reply, "text", "") or "").strip()[:20]
-        record(PASS, "Model endpoint reachable", f"{model} @ {location} replied {text!r}")
+        record(PASS, "Model endpoint reachable", f"{model} replied {text!r}")
     except Exception as exc:
-        detail = f"{type(exc).__name__}: {str(exc)[:100]}"
-        if "404" in str(exc) or "NOT_FOUND" in str(exc):
-            fix = (
-                f"{model} is not served from {location!r}. Gemini 3.x is only on "
-                "the 'global' endpoint — set GOOGLE_CLOUD_LOCATION=global, or use "
-                "gemini-2.5-flash for a regional endpoint."
-            )
-        else:
-            fix = (
-                "check the project id, that the Vertex AI API is enabled, and "
-                "that your network allows googleapis.com"
-            )
-        record(FAIL, "Model endpoint reachable", detail, fix)
+        record(
+            FAIL,
+            "Model endpoint reachable",
+            f"{type(exc).__name__}: {str(exc)[:100]}",
+            env.explain_api_error(exc),
+        )
 
 
 def check_dataset() -> None:
@@ -313,26 +258,18 @@ def main() -> int:
     parser.add_argument(
         "--cloud",
         action="store_true",
-        help="also make one real Vertex AI call (costs a fraction of a cent)",
+        help="also make one real model call (costs a fraction of a cent)",
     )
     args = parser.parse_args()
 
-    # data.py reads .env, so LAB_PROJECT_ID from there is picked up here too.
-    try:
-        from lab.data import _load_dotenv
-
-        _load_dotenv()
-    except Exception:
-        pass
+    env.load_env()
 
     print(f"Surgical Agent Lab — preflight on {platform.platform()}\n")
     check_python()
     check_virtualenv()
     check_packages()
-    check_gcloud()
-    check_adc()
-    check_project()
-    check_vertex(args.cloud)
+    check_api_key()
+    check_model_call(args.cloud)
     check_dataset()
     check_pipeline_end_to_end()
     check_port()

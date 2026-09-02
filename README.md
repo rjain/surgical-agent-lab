@@ -12,11 +12,33 @@ discussing. Built in three labs.
 ```bash
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-python preflight.py                                 # add --cloud once you have credentials
+cp .env.example .env                                # then paste your API key into it
+python preflight.py --cloud
 ```
 
+That is the whole setup. **No gcloud, no cloud project, no sign-in** — the lab
+authenticates with a single Gemini API key. Get one from
+[aistudio.google.com/apikey](https://aistudio.google.com/apikey).
+
 `preflight.py` prints a report to send back to the instructors. Run it when you
-get your credentials, not on the day.
+get your key, not on the day.
+
+> **The key needs credit on it.** A key with none looks fine everywhere until
+> the first real call, which fails with a `429` about prepayment credits.
+> `preflight.py --cloud` is what catches that, which is why it is worth running
+> at least once.
+
+### Settings
+
+`.env` at the repository root, read by the code itself rather than by the
+editor — so it behaves the same from the terminal, the debugger, Streamlit and
+pytest. Both `KEY=value` and `export KEY="value"` work.
+
+| | |
+|---|---|
+| `LAB_GEMINI_API_KEY` | required |
+| `LAB_DATA_DIR` | only if the dataset is not at `data/labels/` |
+| `LAB_MODEL` | defaults to `gemini-flash-latest` |
 
 ### Where the data goes
 
