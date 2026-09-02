@@ -110,8 +110,17 @@ def explain_api_error(exc: Exception) -> str:
                 "https://aistudio.google.com/ (Billing), then re-run"
             )
         return "rate limited — wait a moment and re-run, or use a key with a higher limit"
-    if "API_KEY_INVALID" in text or "API key not valid" in text:
-        return f"the {KEY_VAR} in .env is not a valid key — check for stray quotes or spaces"
+    if (
+        "API_KEY_INVALID" in text
+        or "API key not valid" in text
+        or "UNAUTHENTICATED" in text
+        or "401" in text
+    ):
+        return (
+            f"the {KEY_VAR} in .env was rejected — check for a truncated paste, "
+            "stray quotes, or a key that has been revoked. "
+            "Get a fresh one from https://aistudio.google.com/apikey"
+        )
     if "PERMISSION_DENIED" in text or "403" in text:
         return "the key is valid but not permitted to use this model"
     if "404" in text or "NOT_FOUND" in text:
