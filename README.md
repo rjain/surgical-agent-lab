@@ -148,7 +148,7 @@ A reference implementation of every one is in `solutions/`; reading it after
 you have tried is a normal move.
 
 ```bash
-pytest -q            # 36 tests, no key needed and no tokens spent
+pytest -q            # 75 tests, no key needed and no tokens spent
 ```
 
 The variant tabs in the interface stay dark until the matching file is
