@@ -10,7 +10,7 @@
         "step_oscillation"
       ],
       "local": "data/clips/case_129_p1_5669.mp4",
-      "uri": ""
+      "uri": "https://generativelanguage.googleapis.com/v1beta/files/lmpant1rtlij"
     },
     "case_129_p1_8571": {
       "case_id": "case_129",
@@ -21,7 +21,7 @@
         "step_oscillation"
       ],
       "local": "data/clips/case_129_p1_8571.mp4",
-      "uri": ""
+      "uri": "https://generativelanguage.googleapis.com/v1beta/files/za0n48ombuqd"
     },
     "case_129_p1_17064": {
       "case_id": "case_129",
@@ -32,7 +32,7 @@
         "swap_rate"
       ],
       "local": "data/clips/case_129_p1_17064.mp4",
-      "uri": ""
+      "uri": "https://generativelanguage.googleapis.com/v1beta/files/1r4sh6kyvhgx"
     },
     "case_129_p1_21699": {
       "case_id": "case_129",
@@ -43,7 +43,7 @@
         "step_overrun"
       ],
       "local": "data/clips/case_129_p1_21699.mp4",
-      "uri": ""
+      "uri": "https://generativelanguage.googleapis.com/v1beta/files/qo102yzja2mu"
     },
     "case_129_p1_21144": {
       "case_id": "case_129",
@@ -54,7 +54,7 @@
         "swap_rate"
       ],
       "local": "data/clips/case_129_p1_21144.mp4",
-      "uri": ""
+      "uri": "https://generativelanguage.googleapis.com/v1beta/files/djowgsi7y4gg"
     },
     "case_036_p2_4437": {
       "case_id": "case_036",
@@ -65,7 +65,7 @@
         "swap_rate"
       ],
       "local": "data/clips/case_036_p2_4437.mp4",
-      "uri": ""
+      "uri": "https://generativelanguage.googleapis.com/v1beta/files/10emqj0mnud4"
     },
     "case_036_p2_3961": {
       "case_id": "case_036",
@@ -76,7 +76,7 @@
         "unknown_instrument"
       ],
       "local": "data/clips/case_036_p2_3961.mp4",
-      "uri": ""
+      "uri": "https://generativelanguage.googleapis.com/v1beta/files/xaeb31umjz9h"
     }
   }
 }

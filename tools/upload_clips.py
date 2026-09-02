@@ -46,7 +46,7 @@ def main() -> int:
     raw = read_raw()
     print(f"{'clip':26} {'local':>7} {'uri':>10} {'action':>12}")
     print("-" * 60)
-    uploaded = failed = live = 0
+    uploaded = failed = live = pending = 0
 
     for clip_id, clip in sorted(manifest.items()):
         local = CLIP_DIR / f"{clip_id}.mp4"
@@ -58,6 +58,10 @@ def main() -> int:
             print(f"{clip_id:26} {'yes' if has_local else '-':>7} {'live':>10} {'-':>12}")
             continue
         if args.check:
+            if has_local:
+                pending += 1
+            else:
+                failed += 1
             print(f"{clip_id:26} {'yes' if has_local else '-':>7} "
                   f"{'stale' if clip.uri else 'none':>10} {'would upload' if has_local else 'NO SOURCE':>12}")
             continue
@@ -79,10 +83,14 @@ def main() -> int:
         MANIFEST_PATH.write_text(json.dumps(raw, indent=2) + "\n")
         print(f"\nwrote {MANIFEST_PATH}")
 
-    print(f"\n{live} already live, {uploaded} uploaded, {failed} without a source")
+    done = f"{uploaded} uploaded" if not args.check else f"{pending} to upload"
+    print(f"\n{live} already live, {done}, {failed} without a source")
     if failed:
         print(f"Put the missing clips in {CLIP_DIR} and re-run.")
-    return 1 if failed else 0
+    if args.check and pending:
+        print("Re-run without --check to upload them.")
+    # --check reports; it is not a failure to have work outstanding.
+    return 1 if failed and not args.check else 0
 
 
 if __name__ == "__main__":
