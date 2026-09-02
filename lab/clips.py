@@ -29,7 +29,7 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from lab.env import REPO_ROOT, client
+from lab.config import REPO_ROOT, client
 
 #: Written by tools/upload_clips.py, committed so participants inherit the URIs.
 MANIFEST_PATH = REPO_ROOT / "lab" / "clips.json"

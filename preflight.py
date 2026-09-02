@@ -26,7 +26,7 @@ import socket
 import sys
 from pathlib import Path
 
-from lab import env
+from lab import config
 
 MIN_PYTHON = (3, 10)
 STREAMLIT_PORT = 8501
@@ -105,20 +105,20 @@ def check_packages() -> None:
 
 def check_api_key() -> None:
     """The one credential the lab needs."""
-    key = env.api_key()
+    key = config.api_key()
     if not key:
         # Keys are handed out on the day, so an empty one before then is
         # expected rather than broken. Everything else in this report still
         # tells you whether the machine is ready.
         record(
-            WARN, "Gemini API key", f"{env.KEY_VAR} not set yet",
+            WARN, "Gemini API key", f"{config.KEY_VAR} not set yet",
             "expected if you have not been given a key. Paste it into .env on "
             "the day and re-run this — it takes thirty seconds",
         )
         return
     if len(key) < 20:
         record(
-            FAIL, "Gemini API key", f"{env.KEY_VAR} looks too short ({len(key)} chars)",
+            FAIL, "Gemini API key", f"{config.KEY_VAR} looks too short ({len(key)} chars)",
             "check for stray quotes or a truncated paste in .env",
         )
         return
@@ -138,15 +138,15 @@ def check_model_call(enabled: bool) -> None:
     if not enabled:
         record(SKIP, "Model endpoint reachable", "pass --cloud to run this")
         return
-    if not env.api_key():
+    if not config.api_key():
         record(
             SKIP, "Model endpoint reachable",
             "no key yet — re-run once you have one",
         )
         return
-    model = env.model()
+    model = config.model()
     try:
-        client = env.client()
+        client = config.client()
         reply = client.models.generate_content(model=model, contents="Reply with OK.")
         text = (getattr(reply, "text", "") or "").strip()[:20]
         record(PASS, "Model endpoint reachable", f"{model} replied {text!r}")
@@ -173,7 +173,7 @@ def check_model_call(enabled: bool) -> None:
             FAIL,
             "Model endpoint reachable",
             f"{type(exc).__name__}: {str(exc)[:100]}",
-            env.explain_api_error(exc),
+            config.explain_api_error(exc),
         )
 
 
@@ -242,7 +242,7 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    env.load_env()
+    config.load_env()
 
     print(f"Surgical Agent Lab — preflight on {platform.platform()}\n")
     check_python()

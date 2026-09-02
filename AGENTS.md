@@ -57,9 +57,12 @@ directly, you have to handle them yourself — so prefer the loaders.
   from the signature and the docstring, so vague docstrings produce agents that
   pick the wrong tool. Write them as an interface, with an `Args:` block.
 - Pinned dependencies. Do not upgrade anything in `requirements.txt`.
-- Authentication is a **Gemini API key** in `.env`, read through `lab/env.py`.
+- Authentication is a **Gemini API key** in `.env`, read through `lab/config.py`.
   There is no cloud project, no ADC and no endpoint region. Do not reintroduce
   them, and never print or commit the key.
+- **Never quote the API key back to the user, print it, or write it into a
+  file.** It lives in `.env`, which is gitignored. Do not paste it into a chat
+  or a commit: transcripts and history outlive the key.
 - Video reaches the model through `lab.clips.resolve_clip()`, never a `gs://`
   URI — the Gemini API rejects those. Do not hand-roll uploads: uploaded files
   expire after 48 hours and belong to one project, and `resolve_clip` already

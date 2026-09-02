@@ -55,13 +55,19 @@ def load_env() -> None:
             if key and key not in os.environ:
                 os.environ[key] = value
 
-    # ADK looks for GOOGLE_API_KEY and decides between the Gemini API and the
-    # Agent Platform from GOOGLE_GENAI_USE_VERTEXAI. Set both from our one key
-    # so participants configure a single thing.
+    # The SDK and ADK read GOOGLE_API_KEY and GOOGLE_GENAI_USE_VERTEXAI
+    # automatically, which is exactly why the lab key has its own name: a
+    # participant who already works with Gemini has GOOGLE_API_KEY set to their
+    # own key, and it would silently win.
+    #
+    # Assigned, not setdefault. Deferring to whatever is already in the
+    # environment is what causes that shadowing — the lab key must win inside
+    # this process. Nothing outside it is touched: this is os.environ for one
+    # interpreter, not the participant's shell or their other projects.
     api_key = os.environ.get(KEY_VAR)
     if api_key:
-        os.environ.setdefault("GOOGLE_API_KEY", api_key)
-    os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "False")
+        os.environ["GOOGLE_API_KEY"] = api_key
+    os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "False"
 
 
 @lru_cache(maxsize=1)

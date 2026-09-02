@@ -25,12 +25,12 @@ tools were called so you can check it.
 
 from __future__ import annotations
 
-from lab import env
+from lab import config
 from lab.lab2_analyze import analyze_clip as _analyze_clip
 from lab.metrics import get_metrics as _get_metrics
 from lab.rules import list_deviations as _list_deviations
 
-MODEL = env.model()
+MODEL = config.model()
 
 
 # --- the three tools -------------------------------------------------------

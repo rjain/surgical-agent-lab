@@ -40,7 +40,7 @@ import os
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
-from lab.env import load_env
+from lab.config import load_env
 
 load_env()
 

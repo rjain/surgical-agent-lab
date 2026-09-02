@@ -20,6 +20,11 @@ Three things in here are worth reading even if your own version works:
   keeps twenty-five people inside a shared rate limit.
 * **`validate()` fails loudly and the caller retries once** with a tightened
   instruction. A guardrail that only logs is not a guardrail.
+* **Results are cached to disk** via `@cache.disk_cached`. Lab 3 and its
+  variants call this repeatedly over the same moments; without the cache the
+  second run of an agent costs exactly what the first did. Delete `.cache/`
+  after changing a prompt — the key covers the arguments, not your
+  instructions.
 """
 
 from __future__ import annotations
@@ -28,7 +33,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from lab import clips, env
+from lab import cache, clips, config
 from lab.rules import find_deviations
 
 # --- schema ----------------------------------------------------------------
@@ -160,6 +165,7 @@ def _prompt(case_id: str, part: int, t_start: float, t_end: float) -> str:
     )
 
 
+@cache.disk_cached("notes")
 def analyze_clip(
     case_id: str,
     part: int = 1,
@@ -186,19 +192,25 @@ def analyze_clip(
         )
     uri = clips.resolve_clip(clip.clip_id)
 
-    # Offsets are relative to the clip, and the clip may start partway through
-    # the part it was cut from.
+    # Offsets are relative to the clip, which starts partway through the part
+    # it was cut from. Clamped to the clip's own span: an offset past the end
+    # of the file returns a bare 400 INVALID_ARGUMENT that names nothing, and
+    # a manifest whose times drift from the footage is exactly the kind of
+    # thing that happens when clips are re-cut.
     window = None
     if t_start is not None and t_end is not None:
+        span = max(1.0, clip.duration_s)
+        lo_off = min(max(0.0, t_start - clip.start_s), span - 1.0)
+        hi_off = min(max(lo_off + 1.0, t_end - clip.start_s), span)
         window = types.VideoMetadata(
-            start_offset=f"{max(0.0, t_start - clip.start_s):.0f}s",
-            end_offset=f"{max(1.0, t_end - clip.start_s):.0f}s",
+            start_offset=f"{lo_off:.0f}s", end_offset=f"{hi_off:.0f}s"
         )
     lo = t_start if t_start is not None else clip.start_s
     hi = t_end if t_end is not None else clip.end_s
 
     prompt = _prompt(case_id, part, lo, hi)
-    config = types.GenerateContentConfig(
+    # not `config` — that is the module this file imports
+    gen_config = types.GenerateContentConfig(
         system_instruction=SYSTEM_INSTRUCTION,
         response_mime_type="application/json",
         response_schema=TechniqueNotes,
@@ -212,8 +224,8 @@ def analyze_clip(
             + str(last_error)
             + "\nAnswer again, fixing exactly that."
         )
-        reply = env.client().models.generate_content(
-            model=env.model(),
+        reply = config.client().models.generate_content(
+            model=config.model(),
             contents=types.Content(
                 role="user",
                 parts=[
@@ -224,7 +236,7 @@ def analyze_clip(
                     types.Part(text=text),
                 ],
             ),
-            config=config,
+            config=gen_config,
         )
         notes = TechniqueNotes.model_validate_json(reply.text)
         try:
