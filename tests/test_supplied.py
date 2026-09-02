@@ -283,18 +283,27 @@ def test_every_flag_nominates_a_watchable_window():
 def test_participant_files_still_need_writing():
     """Guards against a reference solution being copied in and committed.
 
-    Testing a solution locally means overwriting these files. Forgetting to
-    restore them would hand every participant the answers.
+    Testing a solution locally means overwriting these files, and forgetting to
+    restore one would hand every participant the answers. Covers all six entry
+    points across the four participant files — the variants included, since
+    those are the ones most likely to be staged for a demo and left behind.
     """
-    import lab.lab2_analyze as cp1
-    import lab.lab3_agent as cp2
+    import lab.lab2_analyze as lab2
+    import lab.lab3_agent as lab3
+    from lab.variants import auditor, coach
 
     with pytest.raises(NotImplementedError):
-        cp1.analyze_clip("case_045")
+        lab2.analyze_clip("case_045")
     with pytest.raises(NotImplementedError):
-        cp1.validate(None, 0.0, 1.0)
+        lab2.validate(None, 0.0, 1.0)
     with pytest.raises(NotImplementedError):
-        cp2.build_agent()
+        lab3.build_agent()
+    with pytest.raises(NotImplementedError):
+        coach.build_workflow_tracker()
+    with pytest.raises(NotImplementedError):
+        coach.build_coach()
+    with pytest.raises(NotImplementedError):
+        auditor.build_auditor()
 
 
 def test_the_dataset_is_actually_present():
