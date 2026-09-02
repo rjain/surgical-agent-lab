@@ -164,7 +164,7 @@ the lab on the two layers above it.
 | `lab/cache.py` | disk cache, so re-running a window is free |
 | `lab/runtime.py` | drives an ADK session and records every tool call |
 | `ui/app.py` | timeline, flagged moments, and both variant tabs |
-| `preflight.py` | eight environment checks, none of which spends a token |
+| `preflight.py` | ten environment checks, none of which spends a token |
 
 | You write | Lab |
 |---|---|

@@ -3,5 +3,9 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .env
+# Any *.env, not just the canonical one: a key in a differently-named file is
+# still a key, and `git add -A` does not know the difference.
+*.env
+!.env.example
 data/
 .cache/

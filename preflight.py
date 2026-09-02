@@ -10,10 +10,11 @@ report at the bottom is what you send back to the instructors — copy the whole
 thing, including the failures. A failure found today takes two minutes to fix;
 the same failure on the day costs the room fifteen.
 
-Nine checks: Python version, virtual environment, packages, API key, network
+Ten checks: Python version, virtual environment, packages, API key, network
 reach to the API, dataset, the detection pipeline end to end, the Streamlit
-port, and **the Antigravity extensions the Run and Debug targets need**. The
-last one is a warning rather than a failure — the IDE is what the session
+port, **the Antigravity extensions the Run and Debug targets need**, and
+whether this key can see the lab's video clips. The last two are warnings
+rather than failures — the IDE is what the session
 assumes, but everything here also runs from a terminal.
 
 **Nothing here spends a token.** The one check that touches the API lists the
@@ -183,6 +184,51 @@ def check_api_reachable() -> None:
             "API reachable",
             f"reached the API, but {wanted} is not offered to this key",
             f"set LAB_MODEL in .env to one that is, e.g. {', '.join(close) or 'see aistudio.google.com'}",
+        )
+
+
+def check_clip_visibility() -> None:
+    """Whether this key can see the clips the lab will ask it to read.
+
+    Costs nothing: reading a file's metadata is not a billed operation, so
+    this works on a key with no generation quota left.
+
+    It is the one thing the other checks cannot tell you. Files on the Gemini
+    API belong to the *project* the key came from, so a perfectly valid,
+    fully funded key from the wrong project passes every check above and then
+    fails on every clip in Lab 2.
+
+    Never a failure, because two innocent situations look identical here: the
+    instructors have not refreshed the clips yet (they expire after 48 hours),
+    and you are on the shared pre-flight key, which lives in its own project
+    by design. Both report the same 403.
+    """
+    if not config.api_key():
+        record(SKIP, "Lab clips visible", "no key yet")
+        return
+    try:
+        from lab.clips import load_manifest
+        manifest = load_manifest()
+    except Exception as exc:
+        record(SKIP, "Lab clips visible", f"no manifest ({type(exc).__name__})")
+        return
+    clip = next((c for c in manifest.values() if c.uri), None)
+    if clip is None:
+        record(
+            SKIP, "Lab clips visible", "manifest carries no URIs yet",
+            "expected before the session: instructors upload the clips on the day",
+        )
+        return
+    try:
+        config.client().files.get(name="files/" + clip.uri.rsplit("/", 1)[-1])
+        record(PASS, "Lab clips visible", f"{clip.clip_id} readable with this key")
+    except Exception:
+        record(
+            WARN, "Lab clips visible", "this key cannot read the lab's clips",
+            "expected before the day. On Tuesday it means either the clips "
+            "have not been refreshed yet, or your key is from a different "
+            "project than the one they were uploaded to. Tell the instructors "
+            "rather than debugging it",
         )
 
 
@@ -378,6 +424,7 @@ def main() -> int:
     check_pipeline_end_to_end()
     check_port()
     check_antigravity()
+    check_clip_visibility()
     check_generation(args.spend)
 
     failed = [r for r in _results if r[0] == FAIL]
