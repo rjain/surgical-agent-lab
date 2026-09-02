@@ -41,6 +41,12 @@ API rather than guessed:
   `Deviation` carries a `watch_window` — 40 seconds around the instant that
   explains the flag — which costs about 10,000. That is a 16-fold saving and it
   is what keeps twenty-five people inside a shared rate limit.
+* **Expect one warning, and switch it off properly.** The SDK enables automatic
+  function calling by default, so it logs an AFC warning even on a call that
+  passes no tools. Pass
+  `automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True)`
+  in your `GenerateContentConfig`. Nothing here should be calling a tool — that
+  is Lab 3's job — so saying so is the honest fix rather than muting the log.
 
 A reference implementation is in `solutions/`. Using it is a normal move, not
 a defeat — but write your own prompt first.

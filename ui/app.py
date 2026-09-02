@@ -214,6 +214,11 @@ def render_session(case_id: str) -> None:
                 width="stretch",
                 hide_index=True,
             )
+            lo, hi = dev.watch_window
+            st.caption(
+                f"Watch window {lo:.0f}–{hi:.0f}s — the 40 seconds around the "
+                "instant that explains this flag, which is what gets sent."
+            )
             if st.button("Explain this moment", key=f"explain_{part}_{i}"):
                 if analyze is None:
                     st.warning(
@@ -223,8 +228,15 @@ def render_session(case_id: str) -> None:
                 else:
                     with st.spinner("Asking Gemini about this window…"):
                         try:
-                            notes = analyze(dev.case_id, dev.start_s, dev.end_s)
+                            # part, then offsets within that part — the whole
+                            # segment would be 45 minutes of video.
+                            notes = analyze(dev.case_id, dev.part, lo, hi)
                             render_notes(notes)
+                        except NotImplementedError:
+                            st.warning(
+                                "`analyze_clip` is still a skeleton — that is "
+                                "Lab 2. Its notes appear here once you write it."
+                            )
                         except Exception as exc:
                             st.error(f"{type(exc).__name__}: {exc}")
 
@@ -257,9 +269,64 @@ def render_notes(notes) -> None:
 # --------------------------------------------------------------------------
 
 
-def render_coach(case_id: str) -> None:
+def _coach_for(case_id: str):
+    """Build the Coach once and keep it across reruns.
+
+    Streamlit re-executes this file on every interaction, so a conversation
+    built inline would forget the previous question. It is cached per session
+    id, and switching sessions deliberately starts a fresh conversation.
+    """
+    from lab.runtime import Conversation
+
     build_coach, build_tracker = _load_coach()
     if build_coach is None:
+        return None, None
+
+    key = f"coach::{case_id}"
+    if key not in st.session_state:
+        # The skeleton defines these functions and raises from inside them, so
+        # importing tells us nothing about whether they are written. Calling
+        # them is the only test, and both outcomes are expected states:
+        # no Tracker is the minimum shippable form, and no Coach means Variant
+        # A has not been started.
+        note = ""
+        try:
+            agent = build_coach(build_tracker())
+        except NotImplementedError:
+            try:
+                agent = build_coach()
+            except NotImplementedError:
+                return None, None
+            note = "single-agent form — WorkflowTracker not written yet"
+        st.session_state[key] = (Conversation(agent), note)
+        st.session_state[f"log::{case_id}"] = []
+    return st.session_state[key]
+
+
+def render_trace(calls) -> None:
+    """Show what the agent actually consulted.
+
+    The highest-value thing on this page. Prose reads the same whether a
+    number came from a measurement or from the model's imagination, and this
+    is the only way to tell the two apart from outside.
+    """
+    if not calls:
+        st.caption(
+            "⚠️ No tools called — this answer came from the model alone. "
+            "Treat any number in it as invented."
+        )
+        return
+    with st.expander(f"Grounding — {len(calls)} tool call(s)"):
+        for call in calls:
+            st.markdown(f"**`{call.name}`**")
+            st.json(call.args, expanded=False)
+            if call.response is not None:
+                st.json(call.response, expanded=False)
+
+
+def render_coach(case_id: str) -> None:
+    conversation, note = _coach_for(case_id)
+    if conversation is None:
         st.info(
             "**Variant A is not wired up yet.** Write `build_workflow_tracker()` "
             "and `build_coach()` in `lab/variants/coach.py` and this tab becomes "
@@ -270,18 +337,117 @@ def render_coach(case_id: str) -> None:
             "Without it you cannot tell grounding from invention."
         )
         return
-    st.success("Coach loaded. Wire the runner in to start the conversation.")
+
+    if note:
+        st.caption(f"Coach loaded — {note}.")
+    st.caption(
+        f"Asking about **{case_id}**. Try: *which step ran longest?* · "
+        "*what should I look at next?* · *what does the footage show there?*"
+    )
+
+    log_key = f"log::{case_id}"
+    for turn in st.session_state.get(log_key, []):
+        with st.chat_message(turn["role"]):
+            st.markdown(turn["text"])
+            if turn["role"] == "assistant":
+                render_trace(turn.get("calls", []))
+
+    question = st.chat_input("Ask about this session")
+    if not question:
+        return
+
+    st.session_state[log_key].append({"role": "user", "text": question})
+    with st.chat_message("user"):
+        st.markdown(question)
+
+    with st.chat_message("assistant"):
+        with st.spinner("Thinking…"):
+            try:
+                # The agent is told which session without cluttering the
+                # displayed question.
+                reply = conversation.ask(f"About session {case_id}: {question}")
+            except Exception as exc:
+                st.error(f"{type(exc).__name__}: {exc}")
+                return
+        st.markdown(reply.text or "_no answer returned_")
+        render_trace(reply.calls)
+    st.session_state[log_key].append(
+        {"role": "assistant", "text": reply.text, "calls": reply.calls}
+    )
+
+
+def render_report(report) -> None:
+    """Render a SessionReport, whatever shape the group gave it."""
+    data = report if isinstance(report, dict) else getattr(report, "model_dump", dict)()
+
+    st.subheader(data.get("headline", "Session report"))
+    if vs := data.get("duration_vs_cohort"):
+        st.caption(vs)
+
+    findings = data.get("findings", [])
+    st.markdown(f"**Findings** ({len(findings)})")
+    for f in findings:
+        colour = RULE_COLOURS.get(f.get("rule_id", ""), "#666")
+        st.markdown(
+            f"<span style='color:{colour}'>●</span> "
+            f"**{f.get('rank', '?')}. {f.get('headline', '')}** — "
+            f"{f.get('step', '')} @ {f.get('t', 0):.0f}s "
+            f"<code>{f.get('rule_id', '')}</code>",
+            unsafe_allow_html=True,
+        )
+        if detail := f.get("detail"):
+            st.write(detail)
+        if evidence := f.get("evidence"):
+            st.caption(f"Evidence: {evidence}")
+
+    if recs := data.get("recommendations"):
+        st.markdown("**Recommendations**")
+        for r in recs:
+            st.write(f"- {r}")
+
+    # Not collapsed. A report that hides what it could not establish is the
+    # failure mode this whole lab is arranged against.
+    if limits := data.get("limitations"):
+        st.markdown("**What this review could not establish**")
+        for item in limits:
+            st.write(f"- {item}")
+
+    with st.expander("Raw report"):
+        st.json(data)
 
 
 def render_auditor(case_id: str) -> None:
     build_auditor = _load_auditor()
-    if build_auditor is None:
+    auditor = None
+    if build_auditor is not None:
+        try:
+            auditor = build_auditor()
+        except NotImplementedError:
+            auditor = None
+    if auditor is None:
         st.info(
             "**Variant B is not wired up yet.** Write `build_auditor()` in "
             "`lab/variants/auditor.py` and this tab runs it over the session."
         )
         return
-    st.success("Auditor loaded. Wire the runner in to produce a report.")
+
+    st.caption(
+        "One action, unattended, over the whole session. Expect roughly one "
+        "clip call per flagged moment, so give it half a minute."
+    )
+    key = f"report::{case_id}"
+    if st.button(f"Review {case_id}", type="primary"):
+        with st.spinner("Reviewing the session…"):
+            try:
+                st.session_state[key] = (
+                    auditor(case_id) if callable(auditor) else auditor
+                )
+            except Exception as exc:
+                st.error(f"{type(exc).__name__}: {exc}")
+                return
+
+    if key in st.session_state:
+        render_report(st.session_state[key])
 
 
 # --------------------------------------------------------------------------

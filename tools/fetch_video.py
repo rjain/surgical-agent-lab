@@ -25,6 +25,8 @@ import argparse
 import io
 import shutil
 import sys
+import time
+import urllib.error
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -45,11 +47,18 @@ class RangeFile(io.RawIOBase):
 
     Enough for :mod:`zipfile` to read a central directory without pulling the
     whole archive.
+
+    Reads retry on their own. An eleven-gigabyte pull over a hotel or office
+    link will drop a connection sooner or later, and because each read is an
+    independent ranged request, retrying one costs a few megabytes rather than
+    restarting the member. Without this a single timeout three hours in
+    discards everything.
     """
 
-    def __init__(self, url: str, timeout: int = 180) -> None:
+    def __init__(self, url: str, timeout: int = 180, attempts: int = 6) -> None:
         self.url = url
         self.timeout = timeout
+        self.attempts = attempts
         self.pos = 0
         head = urllib.request.Request(url, method="HEAD")
         with urllib.request.urlopen(head, timeout=timeout) as response:
@@ -82,8 +91,23 @@ class RangeFile(io.RawIOBase):
         request = urllib.request.Request(
             self.url, headers={"Range": f"bytes={self.pos}-{last}"}
         )
-        with urllib.request.urlopen(request, timeout=self.timeout) as response:
-            data = response.read()
+        for attempt in range(1, self.attempts + 1):
+            try:
+                with urllib.request.urlopen(request, timeout=self.timeout) as response:
+                    data = response.read()
+                break
+            except (urllib.error.URLError, TimeoutError, ConnectionError) as exc:
+                if attempt == self.attempts:
+                    raise
+                # The position has not moved, so the same range is simply
+                # asked for again. Back off a little each time.
+                delay = min(2 ** attempt, 30)
+                print(
+                    f"    read failed ({type(exc).__name__}), retrying in "
+                    f"{delay}s [{attempt}/{self.attempts - 1}]",
+                    flush=True,
+                )
+                time.sleep(delay)
         self.pos += len(data)
         return data
 

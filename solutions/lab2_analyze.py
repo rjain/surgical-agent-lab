@@ -214,6 +214,12 @@ def analyze_clip(
         system_instruction=SYSTEM_INSTRUCTION,
         response_mime_type="application/json",
         response_schema=TechniqueNotes,
+        # This call describes footage; it never calls a tool. The SDK enables
+        # automatic function calling by default, so say no explicitly — tool
+        # use belongs in Lab 3, not here.
+        automatic_function_calling=types.AutomaticFunctionCallingConfig(
+            disable=True
+        ),
     )
 
     last_error: Exception | None = None
