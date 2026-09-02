@@ -86,6 +86,22 @@ Run targets under `Run and Debug`:
 `AGENTS.md` orients the IDE's agent: what is supplied, what you write, and the
 rules it must not break — chiefly that it must never invent a number.
 
+## Preparing the data (instructors only)
+
+The published SurgVU archive is a single 344 GB zip, but it is a public Cloud
+Storage object and it stores one video per case — so only the cases we use need
+downloading, about 11.6 GB for six.
+
+```bash
+pip install imageio-ffmpeg          # bundles ffmpeg; no system install needed
+python tools/fetch_video.py --list  # 155 cases, curated six marked
+python tools/fetch_video.py --curated
+python tools/cut_clips.py           # 37 clips, ~45 MB, writes lab/clips.json
+python tools/upload_clips.py        # Files API pre-upload, on the day
+```
+
+Participants never run any of this. They get the clips, not the source video.
+
 ## Status
 
 | | |
