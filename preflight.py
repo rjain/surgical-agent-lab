@@ -31,16 +31,16 @@ from lab import env
 MIN_PYTHON = (3, 10)
 STREAMLIT_PORT = 8501
 
-PASS, FAIL, SKIP = "PASS", "FAIL", "SKIP"
+PASS, FAIL, SKIP, WARN = "PASS", "FAIL", "SKIP", "WARN"
 _results: list[tuple[str, str, str, str]] = []
 
 
 def record(status: str, name: str, detail: str = "", fix: str = "") -> None:
     _results.append((status, name, detail, fix))
-    icon = {PASS: "  ok  ", FAIL: " FAIL ", SKIP: " skip "}[status]
+    icon = {PASS: "  ok  ", FAIL: " FAIL ", SKIP: " skip ", WARN: " note "}[status]
     print(f"[{icon}] {name}" + (f" — {detail}" if detail else ""))
-    if status == FAIL and fix:
-        print(f"          fix: {fix}")
+    if status in (FAIL, WARN) and fix:
+        print(f"          {'fix' if status == FAIL else 'do this'}: {fix}")
 
 
 # --- 1-3: the interpreter and its packages ---------------------------------
@@ -145,6 +145,24 @@ def check_model_call(enabled: bool) -> None:
         text = (getattr(reply, "text", "") or "").strip()[:20]
         record(PASS, "Model endpoint reachable", f"{model} replied {text!r}")
     except Exception as exc:
+        text = str(exc)
+        depleted = "RESOURCE_EXHAUSTED" in text and (
+            "credit" in text.lower() or "billing" in text.lower()
+        )
+        if depleted:
+            # Worth separating from a broken setup. The API resolves the model
+            # id *before* it checks billing — a nonsense model id returns 404,
+            # not this — so reaching the billing check proves the install, the
+            # client, the network, the key and the model id are all correct.
+            # The only missing thing is money on the key.
+            record(
+                WARN,
+                "Model endpoint reachable",
+                f"{model} resolved; key has no credit",
+                "your setup is correct — the key needs credit before the "
+                "session: https://aistudio.google.com/ (Billing)",
+            )
+            return
         record(
             FAIL,
             "Model endpoint reachable",
@@ -232,22 +250,29 @@ def main() -> int:
 
     failed = [r for r in _results if r[0] == FAIL]
     skipped = [r for r in _results if r[0] == SKIP]
+    warned = [r for r in _results if r[0] == WARN]
     print("\n" + "-" * 68)
     print("COPY EVERYTHING BELOW THIS LINE INTO YOUR REPLY")
     print("-" * 68)
     print(f"python   {sys.version.split()[0]}   platform {platform.platform()}")
     for status, name, detail, _ in _results:
         print(f"{status:5} {name:32} {detail}")
+    passed = len(_results) - len(failed) - len(skipped) - len(warned)
     print(
-        f"\n{len(_results) - len(failed) - len(skipped)} passed, "
-        f"{len(failed)} failed, {len(skipped)} skipped"
+        f"\n{passed} passed, {len(failed)} failed, "
+        f"{len(warned)} needing attention, {len(skipped)} skipped"
     )
-    if not failed and not skipped:
-        print("Ready. Nothing further to do before the session.")
-    elif not failed:
+    if failed:
+        print("Not ready. Apply the fixes above and re-run.")
+    elif warned:
+        print(
+            "Setup is correct. See the note above for what still needs doing "
+            "before the session."
+        )
+    elif skipped:
         print("Ready, but re-run with --cloud to check the parts that need the network.")
     else:
-        print("Not ready. Apply the fixes above and re-run.")
+        print("Ready. Nothing further to do before the session.")
     print("-" * 68)
     return 1 if failed else 0
 
