@@ -102,49 +102,7 @@ def check_packages() -> None:
         record(PASS, "Required packages", f"streamlit {streamlit.__version__}")
 
 
-# --- 4-6: cloud tooling and identity ---------------------------------------
-
-
-def check_gcloud() -> None:
-    if shutil.which("gcloud") is None:
-        record(
-            FAIL,
-            "gcloud CLI",
-            "not on PATH",
-            "install the Google Cloud CLI: https://cloud.google.com/sdk/docs/install",
-        )
-        return
-    try:
-        out = subprocess.run(
-            ["gcloud", "version"], capture_output=True, text=True, timeout=30
-        )
-        first = out.stdout.strip().splitlines()[0] if out.stdout else "installed"
-        record(PASS, "gcloud CLI", first)
-    except Exception as exc:
-        record(FAIL, "gcloud CLI", str(exc), "reinstall the Google Cloud CLI")
-
-
-def check_adc() -> None:
-    explicit = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
-    if explicit and Path(explicit).exists():
-        record(PASS, "Application Default Credentials", "from environment")
-        return
-    default = (
-        Path.home() / ".config" / "gcloud" / "application_default_credentials.json"
-    )
-    windows = (
-        Path(os.environ.get("APPDATA", "")) / "gcloud"
-        / "application_default_credentials.json"
-    )
-    if default.exists() or windows.exists():
-        record(PASS, "Application Default Credentials", "present")
-    else:
-        record(
-            FAIL,
-            "Application Default Credentials",
-            "not found",
-            "gcloud auth application-default login",
-        )
+# --- 4: the one credential ------------------------------------------------
 
 
 def check_api_key() -> None:
@@ -166,7 +124,7 @@ def check_api_key() -> None:
     record(PASS, "Gemini API key", f"set, {len(key)} chars, ending {key[-4:]}")
 
 
-# --- 7-9: the things that actually fail on a corporate network -------------
+# --- 5-7: the things that actually fail on a locked-down machine -----------
 
 
 def check_model_call(enabled: bool) -> None:
@@ -234,7 +192,7 @@ def check_pipeline_end_to_end() -> None:
         )
 
 
-# --- 10: the local web server ----------------------------------------------
+# --- 8: the local web server -----------------------------------------------
 
 
 def check_port() -> None:
