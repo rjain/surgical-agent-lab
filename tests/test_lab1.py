@@ -165,6 +165,56 @@ def test_list_deviations_is_json_safe():
     json.dumps(list_deviations(GOLDEN))
 
 
+# --- schemas the Gemini API will actually accept ----------------------------
+
+
+def test_schemas_avoid_types_the_api_rejects():
+    """Tuples serialise to `prefixItems`, which the Gemini API refuses.
+
+    The request fails while being built, so this is caught before any network
+    call — but only if something checks. That something is this test.
+    """
+    from lab.cp1_analyze import TechniqueNotes
+
+    def offending_keys(node, path="") -> list[str]:
+        """Find `prefixItems` used as a schema key, not merely mentioned in prose.
+
+        Docstrings end up in the schema's `description`, so a plain substring
+        search over the JSON gives a false positive on this very test.
+        """
+        found = []
+        if isinstance(node, dict):
+            for key, value in node.items():
+                if key == "prefixItems":
+                    found.append(path or "<root>")
+                found += offending_keys(value, f"{path}.{key}" if path else key)
+        elif isinstance(node, list):
+            for i, value in enumerate(node):
+                found += offending_keys(value, f"{path}[{i}]")
+        return found
+
+    schemas = {"TechniqueNotes": TechniqueNotes.model_json_schema()}
+    try:
+        from lab.variants.auditor import SessionReport
+
+        schemas["SessionReport"] = SessionReport.model_json_schema()
+    except Exception:
+        pass
+
+    for name, schema in schemas.items():
+        bad = offending_keys(schema)
+        assert not bad, (
+            f"{name} has tuple field(s) at {bad} — the Gemini API rejects "
+            "prefixItems. Use separate fields or a list."
+        )
+
+
+def test_technique_notes_requires_an_honesty_field():
+    from lab.cp1_analyze import TechniqueNotes
+
+    assert "not_visible" in TechniqueNotes.model_fields
+
+
 def test_the_dataset_is_actually_present():
     cases = list_cases()
     assert len(cases) > 0, "no cases found — is LAB_DATA_DIR set correctly?"

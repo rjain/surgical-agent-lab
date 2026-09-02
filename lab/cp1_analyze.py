@@ -23,6 +23,17 @@ Three things decide whether this works:
    on. `not_visible` must come back non-empty — models overclaim on
    medical-adjacent video, and making honesty a required field is the fix.
 
+Two mechanics worth knowing before you start, both measured against the real
+API rather than guessed:
+
+* **The Gemini API cannot read `gs://` URIs.** Upload the clip with the Files
+  API and reference the returned URI. Uploads take a few seconds and the file
+  stays available for about two days, so cache the handle rather than
+  re-uploading per call.
+* **Window the video.** A ten-second window of a real clip cost 918 prompt
+  tokens against 8,926 for the whole thing — nine times less, for more relevant
+  footage. Dropping to `fps=0.5` took it to 588.
+
 A reference implementation is in `solutions/`. Using it is a normal move, not
 a defeat — but write your own prompt first.
 """
@@ -44,10 +55,18 @@ class Observation(BaseModel):
 
 
 class TechniqueNotes(BaseModel):
-    """Structured commentary on one window of a session."""
+    """Structured commentary on one window of a session.
+
+    Note the window is two floats rather than a tuple. A ``tuple[float, float]``
+    serialises to ``prefixItems`` in JSON Schema, which the Gemini API rejects
+    outright — the request fails before it is sent. The same applies to any
+    field you add: stick to str, float, int, bool, Literal, lists of those, and
+    nested models.
+    """
 
     case_id: str
-    window: tuple[float, float]
+    window_start_s: float
+    window_end_s: float
     summary: str = Field(description="one or two sentences")
     observations: list[Observation] = Field(description="two to five, each timestamped")
     visible_factors: list[str] = Field(
