@@ -256,6 +256,27 @@ def test_unreachable_clip_explains_the_own_key_case():
         clips._resolved.clear()
 
 
+def test_every_flag_nominates_a_watchable_window():
+    """A flag spanning 45 minutes is not something you can send to a model.
+
+    Sending a whole flagged segment costs roughly 170,000 tokens. The watch
+    window has to stay small and stay inside the segment it came from.
+    """
+    from lab.rules import FOCUS_WINDOW_S, find_deviations
+
+    for case in ("case_045", "case_036", "case_044"):
+        for dev in find_deviations(case):
+            lo, hi = dev.watch_window
+            assert hi > lo, f"{dev.rule_id} produced an empty window"
+            assert hi - lo <= FOCUS_WINDOW_S + 0.01, (
+                f"{dev.rule_id} window is {hi - lo:.0f}s, over the "
+                f"{FOCUS_WINDOW_S:.0f}s budget"
+            )
+            assert dev.start_s <= lo and hi <= dev.end_s + 0.01, (
+                f"{dev.rule_id} watch window falls outside its own segment"
+            )
+
+
 def test_the_dataset_is_actually_present():
     cases = list_cases()
     assert len(cases) > 0, "no cases found — is LAB_DATA_DIR set correctly?"

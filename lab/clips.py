@@ -181,6 +181,57 @@ def resolve_clip(clip_id: str) -> str:
     )
 
 
+def clip_id_for(case_id: str, part: int, start_s: float) -> str:
+    """The canonical id for the clip covering a flagged window.
+
+    Clips are cut to the windows the rules flag, so a case, a part and a start
+    time identify one exactly. Keeping the id derivable means callers do not
+    have to carry clip ids around alongside the measurements.
+
+    Args:
+        case_id: e.g. ``"case_045"``.
+        part: video part the window belongs to.
+        start_s: window start, seconds within that part.
+    """
+    return f"{case_id}_p{int(part)}_{int(round(start_s))}"
+
+
+def find_for_window(
+    case_id: str, part: int, start_s: float, end_s: float
+) -> Clip | None:
+    """The manifest entry whose footage covers this window, if there is one.
+
+    Tries the derived id first, then falls back to any clip in the same part
+    that overlaps — clips are cut with a little padding, so a flag's window and
+    its clip's boundaries rarely match to the second.
+
+    Args:
+        case_id: e.g. ``"case_045"``.
+        part: video part the window belongs to.
+        start_s: window start, seconds within that part.
+        end_s: window end, seconds within that part.
+    """
+    manifest = load_manifest()
+    exact = manifest.get(clip_id_for(case_id, part, start_s))
+    if exact is not None:
+        return exact
+    overlapping = [
+        c
+        for c in manifest.values()
+        if c.case_id == case_id
+        and c.part == int(part)
+        and c.start_s < end_s
+        and c.end_s > start_s
+    ]
+    if not overlapping:
+        return None
+    # the clip that covers most of the window
+    return max(
+        overlapping,
+        key=lambda c: min(c.end_s, end_s) - max(c.start_s, start_s),
+    )
+
+
 def clips_for_case(case_id: str) -> list[Clip]:
     """Manifest entries belonging to one session, in playback order.
 

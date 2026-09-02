@@ -30,7 +30,7 @@ from dataclasses import asdict, dataclass, field
 
 import pandas as pd
 
-from lab.data import Case, load_case
+from lab.data import Case, load_case, tool_changes_within
 from lab.metrics import step_metrics
 
 # --- thresholds -------------------------------------------------------------
@@ -40,6 +40,13 @@ from lab.metrics import step_metrics
 SWAP_CHANGES = 4          # instrument changes beginning inside one segment
 OVERRUN_RATIO = 1.4       # segment duration against the corpus median
 MIN_SEGMENT_S = 60.0      # ignore very short segments; ratios are noisy there
+
+#: How much footage is worth watching around a flag, in seconds.
+#: Flagged segments run from 4 to 45 minutes — a median of eleven — and sending
+#: one whole to a model costs roughly 170,000 tokens. Every rule therefore
+#: nominates a `focus_s`: the instant that actually explains the flag. Layer 2
+#: looks at a window this wide around that instant, which costs about 5,000.
+FOCUS_WINDOW_S = 40.0
 
 
 @dataclass(frozen=True)
@@ -66,14 +73,42 @@ class Deviation:
     rule_id: str
     score: float
     evidence: str
+    focus_s: float = 0.0
 
     def as_dict(self) -> dict:
         """Plain-dict form, for JSON and for passing to a model."""
         return asdict(self)
 
+    @property
+    def watch_window(self) -> tuple[float, float]:
+        """The stretch of footage worth actually looking at.
+
+        A flagged segment can run three quarters of an hour. This narrows it to
+        :data:`FOCUS_WINDOW_S` seconds around ``focus_s``, clamped to the
+        segment, which is what makes explaining a flag affordable.
+        """
+        half = FOCUS_WINDOW_S / 2
+        centre = self.focus_s or (self.start_s + self.end_s) / 2
+        lo = max(self.start_s, centre - half)
+        hi = min(self.end_s, lo + FOCUS_WINDOW_S)
+        return (lo, max(hi, lo + 1.0))
+
 
 def _clamp(value: float) -> float:
     return round(max(0.0, min(1.0, value)), 3)
+
+
+def _unknown_mount_time(case: Case, row) -> float:
+    """When the unidentified instrument went on, which is the moment to watch."""
+    during = case.tools[
+        (case.tools["part"] == int(row.part))
+        & (case.tools["start_s"] < row.end_s)
+        & (case.tools["end_s"] > row.start_s)
+        & (case.tools["tool"] == "<unknown>")
+    ]
+    if not len(during):
+        return 0.0
+    return float(max(during["start_s"].min(), row.start_s))
 
 
 def swap_rate_outliers(case: Case, metrics: pd.DataFrame) -> list[Deviation]:
@@ -87,6 +122,11 @@ def swap_rate_outliers(case: Case, metrics: pd.DataFrame) -> list[Deviation]:
     for row in metrics.itertuples():
         if row.tool_changes < SWAP_CHANGES:
             continue
+        # the densest cluster of changes is what a reviewer wants to see
+        changes = tool_changes_within(
+            case.tools, int(row.part), row.start_s, row.end_s
+        )
+        focus = float(changes["start_s"].median()) if len(changes) else 0.0
         out.append(
             Deviation(
                 case_id=case.case_id,
@@ -101,6 +141,7 @@ def swap_rate_outliers(case: Case, metrics: pd.DataFrame) -> list[Deviation]:
                     f"{row.duration_s / 60:.1f} min "
                     f"({row.swaps_per_min:.2f}/min)"
                 ),
+                focus_s=focus,
             )
         )
     return out
@@ -132,6 +173,9 @@ def step_overruns(case: Case, metrics: pd.DataFrame) -> list[Deviation]:
                     f"{row.cohort_median_s / 60:.1f} min "
                     f"({row.duration_ratio:.2f}x)"
                 ),
+                # nothing single-instant about running long, so look at the
+                # point the step passed its expected duration
+                focus_s=float(row.start_s) + float(row.cohort_median_s or 0.0),
             )
         )
     return out
@@ -158,6 +202,7 @@ def unknown_instruments(case: Case, metrics: pd.DataFrame) -> list[Deviation]:
                 rule_id="unknown_instrument",
                 score=0.4,
                 evidence="an instrument was mounted but not identified in the log",
+                focus_s=_unknown_mount_time(case, row),
             )
         )
     return out
@@ -190,6 +235,8 @@ def step_oscillations(case: Case, metrics: pd.DataFrame) -> list[Deviation]:
                     f"returned to {repeat.task!r} after {middle.task!r} "
                     f"ran for {middle.duration_s / 60:.1f} min in between"
                 ),
+                # the start of the second attempt is the interesting part
+                focus_s=float(repeat.start_s) + FOCUS_WINDOW_S / 2,
             )
         )
     return out
