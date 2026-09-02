@@ -12,6 +12,7 @@ discussing. Built in three labs.
 ```bash
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
+python tools/fetch_labels.py                        # the dataset: 335 KB, one second
 cp .env.example .env                                # then paste your API key into it
 python preflight.py
 ```
@@ -19,6 +20,11 @@ python preflight.py
 That is the whole setup. **No gcloud, no cloud project, no sign-in** — the lab
 authenticates with a single Gemini API key. Get one from
 [aistudio.google.com/apikey](https://aistudio.google.com/apikey).
+
+`fetch_labels.py` downloads the published SurgVU label release from its own
+public bucket, so the dataset's terms apply to you directly and nothing has
+been repackaged in between. It is labels only — task segments and instrument
+mounts as CSV. The video clips the lab needs are handled by `lab/clips.py`.
 
 `preflight.py` prints a report to send back to the instructors. Run it when you
 get your key, not on the day.
@@ -45,11 +51,12 @@ pytest. Both `KEY=value` and `export KEY="value"` work.
 
 ### Where the data goes
 
-Put the dataset at **`data/labels/`** inside this repository — so that
-`data/labels/case_045/tasks.csv` exists — and nothing needs configuring.
+`python tools/fetch_labels.py` puts it at **`data/labels/`** inside this
+repository — so that `data/labels/case_045/tasks.csv` exists — and nothing
+needs configuring.
 
-If you keep it elsewhere, set `LAB_DATA_DIR` either in a `.env` file (copy
-`.env.example`) or as an environment variable. The lookup order is:
+If you already keep a copy elsewhere, set `LAB_DATA_DIR` either in a `.env`
+file (copy `.env.example`) or as an environment variable. The lookup order is:
 
 1. `LAB_DATA_DIR`, from the real environment or from `.env`
 2. `data/labels` inside this repository
@@ -100,25 +107,44 @@ python tools/cut_clips.py           # 37 clips, ~45 MB, writes lab/clips.json
 python tools/upload_clips.py        # Files API pre-upload, on the day
 ```
 
-Participants never run any of this. They get the clips, not the source video.
+Participants never run any of this — `tools/fetch_labels.py` is the one tool
+they do run. They get the clips, not the source video.
 
-## Status
+## What is supplied, and what you write
 
-| | |
+Everything below the model is done. Detection is finished and tested; you spend
+the lab on the two layers above it.
+
+| Supplied | |
 |---|---|
-| `lab/data.py` | **supplied, tested** — parts-aware loading, dedupe, unit conversion |
-| `lab/metrics.py` | **supplied, tested** — per-step measurements, corpus comparison |
-| `lab/rules.py` | **supplied, tested** — the deterministic deviation engine |
-| `lab/cohort.json` | corpus medians, built from 155 cases by `tools/build_cohort.py` |
-| `preflight.py` | **working** — ten environment checks |
-| `lab/lab2_analyze.py` | not yet written — Lab 2, the Gemini call |
-| `lab/lab3_agent.py` | not yet written — tools and a single agent |
-| `lab/variants/` | not yet written — Coach and Auditor |
-| `ui/app.py` | not yet written |
+| `lab/data.py` | parts-aware loading, dedupe, unit conversion |
+| `lab/metrics.py` | per-step measurements, corpus comparison |
+| `lab/rules.py` | the deterministic deviation engine — Lab 1, complete |
+| `lab/cohort.json` | corpus medians, built from all 155 cases |
+| `lab/clips.py` | gets a clip to the model, whichever key you hold |
+| `lab/cache.py` | disk cache, so re-running a window is free |
+| `lab/runtime.py` | drives an ADK session and records every tool call |
+| `ui/app.py` | timeline, flagged moments, and both variant tabs |
+| `preflight.py` | eight environment checks, none of which spends a token |
+
+| You write | Lab |
+|---|---|
+| `lab/lab2_analyze.py` | 2 — the Gemini call, and the guardrail on its output |
+| `lab/lab3_agent.py` | 3 — the tool docstrings, and one agent |
+| `lab/variants/coach.py` | Variant A — an agent you talk to |
+| `lab/variants/auditor.py` | Variant B — an agent you launch and leave |
+
+Each of those raises `NotImplementedError` with what it wants in the docstring.
+A reference implementation of every one is in `solutions/`; reading it after
+you have tried is a normal move.
 
 ```bash
-pytest -q            # 16 tests over the supplied modules
+pytest -q            # 36 tests, no key needed and no tokens spent
 ```
+
+The variant tabs in the interface stay dark until the matching file is
+written, then come alive. Under every Coach answer is the list of tools it
+actually called — the only way to tell a measured number from an invented one.
 
 ## Three traps in the raw labels
 
