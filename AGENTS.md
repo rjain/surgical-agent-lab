@@ -60,6 +60,10 @@ directly, you have to handle them yourself — so prefer the loaders.
 - Authentication is a **Gemini API key** in `.env`, read through `lab/env.py`.
   There is no cloud project, no ADC and no endpoint region. Do not reintroduce
   them, and never print or commit the key.
+- Video reaches the model through `lab.clips.resolve_clip()`, never a `gs://`
+  URI — the Gemini API rejects those. Do not hand-roll uploads: uploaded files
+  expire after 48 hours and belong to one project, and `resolve_clip` already
+  handles both.
 - Tests live in `tests/` and run with `pytest -q`. They must stay green.
 
 ## Checking your work

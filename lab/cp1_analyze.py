@@ -26,10 +26,12 @@ Three things decide whether this works:
 Two mechanics worth knowing before you start, both measured against the real
 API rather than guessed:
 
-* **The Gemini API cannot read `gs://` URIs.** Upload the clip with the Files
-  API and reference the returned URI. Uploads take a few seconds and the file
-  stays available for about two days, so cache the handle rather than
-  re-uploading per call.
+* **Getting the clip to the model is done for you.** Call
+  `lab.clips.resolve_clip(clip_id)` and you get a Files API URI that works with
+  whichever key you are using. The Gemini API cannot read `gs://`, uploads live
+  only 48 hours, and pre-uploaded files belong to the project their key came
+  from — `resolve_clip` handles all three and falls back to uploading a local
+  copy when it has to.
 * **Window the video.** A ten-second window of a real clip cost 918 prompt
   tokens against 8,926 for the whole thing — nine times less, for more relevant
   footage. Dropping to `fps=0.5` took it to 588.

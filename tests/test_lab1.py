@@ -215,6 +215,47 @@ def test_technique_notes_requires_an_honesty_field():
     assert "not_visible" in TechniqueNotes.model_fields
 
 
+# --- clip resolution --------------------------------------------------------
+
+
+def test_manifest_loads_even_when_empty_or_absent():
+    """The rest of the lab must still run before any clip is uploaded."""
+    from lab.clips import load_manifest
+
+    assert isinstance(load_manifest(), dict)
+
+
+def test_unknown_clip_id_says_what_is_known():
+    from lab.clips import ClipUnavailable, resolve_clip
+
+    with pytest.raises(ClipUnavailable) as err:
+        resolve_clip("definitely-not-a-clip")
+    assert "not in the manifest" in str(err.value)
+
+
+def test_unreachable_clip_explains_the_own_key_case():
+    """The message has to name the cause, not just fail."""
+    from lab import clips
+
+    clips._resolved.clear()
+    original = clips.load_manifest
+    fake = clips.Clip(
+        clip_id="x", case_id="case_045", part=1, start_s=0.0, end_s=10.0,
+        uri="https://generativelanguage.googleapis.com/v1beta/files/notreal000",
+        local="data/clips/nothing-here.mp4",
+    )
+    clips.load_manifest = lambda: {"x": fake}
+    try:
+        with pytest.raises(clips.ClipUnavailable) as err:
+            clips.resolve_clip("x")
+        message = str(err.value)
+        assert "own API key" in message
+        assert "data/clips" in message
+    finally:
+        clips.load_manifest = original
+        clips._resolved.clear()
+
+
 def test_the_dataset_is_actually_present():
     cases = list_cases()
     assert len(cases) > 0, "no cases found — is LAB_DATA_DIR set correctly?"

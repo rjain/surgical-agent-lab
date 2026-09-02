@@ -78,8 +78,14 @@ def model() -> str:
     return os.environ.get("LAB_MODEL", DEFAULT_MODEL).strip() or DEFAULT_MODEL
 
 
+@lru_cache(maxsize=1)
 def client():
-    """A configured ``google.genai`` client.
+    """A configured ``google.genai`` client, created once per process.
+
+    Cached deliberately. Building a new client per call leaves the previous one
+    to be garbage-collected, which closes the HTTP transport underneath it —
+    the second call then fails with "Cannot send a request, as the client has
+    been closed."
 
     Raises:
         RuntimeError: if no API key is set, with the fix in the message.
