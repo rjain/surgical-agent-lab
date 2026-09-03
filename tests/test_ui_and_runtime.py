@@ -377,3 +377,53 @@ def test_a_prepared_session_does_have_clips(app):
     assert all(
         find_for_window(d.case_id, d.part, *d.watch_window) is not None for d in devs
     ), "case_129 is curated; every flag should have footage"
+
+
+def _timeline_spec(case_id):
+    """Build the timeline chart without running the app's main()."""
+    import pathlib
+    import types
+
+    from lab.data import load_case
+    from lab.metrics import step_metrics
+    from lab.rules import find_deviations
+
+    src = pathlib.Path(APP).read_text().replace("\nmain()\n", "\n")
+    mod = types.ModuleType("appmod")
+    mod.__file__ = APP
+    exec(compile(src, APP, "exec"), mod.__dict__)
+
+    case = load_case(case_id)
+    chart = mod.build_timeline(
+        case, step_metrics(case), find_deviations(case_id), case.parts[0]
+    )
+    return chart.to_dict()
+
+
+def test_the_timeline_gives_each_layer_its_own_colour_scale():
+    """The bug that made the chart look empty on any session with a flag.
+
+    Three layers encode colour on different fields: task, tool, rule. Altair
+    layers share scales by default, and the flags layer pins an explicit
+    domain of the four rule ids. Shared, that domain is imposed on the other
+    two, every task and instrument value falls outside it, and the bands and
+    arm bars render without colour.
+
+    It was invisible in the obvious place to look, because a session with no
+    flags has no third layer and therefore no pinned domain, and drew
+    perfectly.
+    """
+    spec = _timeline_spec("case_045")
+    assert spec["resolve"]["scale"]["color"] == "independent"
+
+    fields = [L.get("encoding", {}).get("color", {}).get("field") for L in spec["layer"]]
+    assert fields == ["task", "tool", "rule"], fields
+
+
+def test_a_session_with_flags_still_carries_its_band_and_arm_data():
+    """The symptom, checked directly: the marks exist and have rows."""
+    spec = _timeline_spec("case_001")
+    datasets = spec["datasets"]
+    rows = [len(datasets[L["data"]["name"]]) for L in spec["layer"]]
+    assert all(n > 0 for n in rows), f"a layer rendered with no rows: {rows}"
+    assert len(spec["layer"]) == 3, "case_001 has flags, so it should have three layers"

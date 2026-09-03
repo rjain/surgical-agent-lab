@@ -181,7 +181,17 @@ def build_timeline(case, metrics: pd.DataFrame, deviations, part: int):
             )
         )
 
-    return alt.layer(*layers).properties(height=28 * len(lanes) + 60)
+    # resolve_scale is not optional here. Layers share scales by default, and
+    # these three encode colour on different fields — task, tool, rule. The
+    # flags layer pins an explicit domain of the four rule ids, that domain
+    # gets imposed on the other two, and every task and instrument value falls
+    # outside it: the bands and the arm bars lose their colour and the chart
+    # renders all but empty. Independent scales give each layer its own.
+    return (
+        alt.layer(*layers)
+        .resolve_scale(color="independent")
+        .properties(height=28 * len(lanes) + 60)
+    )
 
 
 # --------------------------------------------------------------------------
