@@ -160,8 +160,19 @@ def _prompt(case_id: str, part: int, t_start: float, t_end: float) -> str:
     return (
         f"Session {case_id}, part {part}, window {t_start:.0f}–{t_end:.0f}s.\n"
         f"The deterministic rules engine flagged:{context}\n\n"
+        # Be explicit about the frame of reference. The clip is handed over
+        # with video_metadata offsets, so the footage the model sees starts
+        # near zero while the window we want quoted is thousands of seconds
+        # in. Asked only to "cite timestamps" it answers in clip-offset
+        # seconds perfectly reasonably, and the guardrail then rejects it for
+        # a question it was never able to answer. Measured: that alone was
+        # two thirds of first-attempt rejections.
+        f"The footage you have been given IS that window: its first frame is "
+        f"{t_start:.0f}s and its last is {t_end:.0f}s, in session time.\n"
+        f"Every t you report must be a session time between {t_start:.0f} and "
+        f"{t_end:.0f}. Do not report seconds elapsed within the clip.\n\n"
         "Describe what is visible in this window and what it suggests about "
-        "technique. Cite timestamps. State what the footage cannot establish."
+        "technique. State what the footage cannot establish."
     )
 
 
@@ -227,7 +238,10 @@ def analyze_clip(
         trace.step(
             f"sending {hi - lo:.0f}s to {config.model()}"
             if attempt == 1
-            else "guardrail rejected that answer — asking again with the reason"
+            # Name the violation. "rejected" alone tells a participant that
+            # the loop ran but not which of the four checks fired, which is
+            # the only part they can act on.
+            else f"guardrail rejected that: {last_error}. Asking again."
         )
         text = prompt if attempt == 1 else (
             prompt

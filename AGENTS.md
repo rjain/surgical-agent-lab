@@ -91,6 +91,14 @@ if they ever disagree. Every tutorial still shows the old name.
 it gets an `AttributeError` on `None`. This is the `JSON_SCHEMA_FOR_FUNC_DECL`
 experimental feature the warning is about.
 
+**Say which clock you want timestamps in.** A clip goes to the model with
+`video_metadata` offsets, so the footage it sees starts near zero while the
+window under discussion is thousands of seconds into the session. A prompt
+that says only "cite timestamps" gets clip-offset seconds back, and the Lab 2
+guardrail then rejects a reply that answered the question as asked. Measured:
+two thirds of first-attempt rejections before the reference prompt named the
+range.
+
 **Clamp video offsets to the clip's duration.** An offset past the end returns
 a bare `400 INVALID_ARGUMENT` that names nothing.
 

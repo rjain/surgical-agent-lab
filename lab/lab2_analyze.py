@@ -19,10 +19,17 @@ Three things decide whether this works:
 2. **Give the model the flag.** Do not ask the open question "what is wrong
    here". Tell it what the rules found and ask what is visible around that
    moment. The difference in output quality is not close.
-3. **Constrain the output with the schema below.** Free text cannot be built
+3. **Tell the model which clock you want.** The clip is handed over with
+   offsets, so the footage it sees starts near zero, while the window you want
+   quoted is thousands of seconds into the session. Asked only to "cite
+   timestamps" it answers in clip-offset seconds, quite reasonably, and your
+   guardrail then rejects it for a question it could not have answered. Say
+   which frame of reference you want and give it the range. Measured on the
+   reference prompt: that alone was two thirds of first-attempt rejections.
+4. **Constrain the output with the schema below.** Free text cannot be built
    on. `not_visible` must come back non-empty — models overclaim on
    medical-adjacent video, and making honesty a required field is the fix.
-4. **Check the output before anyone sees it.** The schema fixes the shape; it
+5. **Check the output before anyone sees it.** The schema fixes the shape; it
    does not stop the model citing a timestamp it was never shown. `validate()`
    is the guardrail, and you write it too. When it fails, tighten the prompt
    and run again — that loop is the point of this lab.
