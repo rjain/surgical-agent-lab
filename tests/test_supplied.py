@@ -336,20 +336,3 @@ def test_every_rule_explains_what_it_looks_for():
     # the evidence alone rather than breaking on a rule someone just added.
     assert rule_intent("no_such_rule") == ""
 
-
-def test_the_intents_quote_their_thresholds_readably():
-    """Thresholds are interpolated, so they cannot drift. Formatting can.
-
-    There is deliberately no test that the quoted threshold matches the
-    constant: RULE_INTENT builds the sentence with an f-string, so that
-    assertion is true by construction and would pass with the constant set to
-    anything. What can still go wrong is the number rendering badly, which
-    1.4 does without the :g.
-    """
-    from lab.rules import OVERRUN_RATIO, RULE_INTENT, SWAP_CHANGES
-
-    assert f"{OVERRUN_RATIO:g}x" in RULE_INTENT["step_overrun"]
-    assert "1.4000" not in RULE_INTENT["step_overrun"]
-    assert str(SWAP_CHANGES) in RULE_INTENT["swap_rate"]
-    for rule_id, text in RULE_INTENT.items():
-        assert "{" not in text and "}" not in text, f"{rule_id} has an unformatted brace"

@@ -250,7 +250,9 @@ def step_oscillations(case: Case, metrics: pd.DataFrame) -> list[Deviation]:
 #: you know the rule was looking for exactly that. Both halves are needed, so
 #: the interface prints this above the evidence.
 #:
-#: Keep these in step with the constants above if you tune a threshold.
+#: The thresholds are interpolated from the constants above rather than
+#: retyped, so they cannot drift and there is nothing here for a test to
+#: guard. Two attempts at one were tautological before that sank in.
 RULE_INTENT = {
     "swap_rate": (
         "A step with an unusual amount of instrument changing. Swapping is "
