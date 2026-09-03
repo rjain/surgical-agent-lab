@@ -2,79 +2,48 @@
 
 YOU WRITE THIS FILE.
 
-Lab 1 gives you a list: timestamps, rule names, and the measurement behind
-each. That is enough for someone who already knows the exercise, and close to
-useless for the trainee who does not. "Tool-swap churn at 137 seconds" names a
-statistic, not what their hands were doing.
+Lab 1 hands you a list: timestamps, rule names, and the measurement behind
+each. "Tool-swap churn at 137 seconds" names a statistic, not what the
+trainee's hands were doing. Turn one flagged window into a description a
+person can act on, then refuse the ones you cannot defend.
 
-Your job is to turn one flagged window into a description a person can act on:
-parseable, anchored to timestamps, and honest about what the video cannot
-establish.
+Five things decide whether this works.
 
-Three things decide whether this works:
+1. **Window it.** Send the 40-second ``watch_window`` each flag carries, not
+   the whole step. About 10,000 tokens against 170,000, and it is what keeps
+   twenty-five people inside one rate limit.
 
-1. **Window, do not send the whole clip.** A twenty-second window costs roughly
-   5,500 tokens; a three-minute clip costs roughly 50,000, for less relevant
-   footage. Pass the offsets through to the video part.
-2. **Give the model the flag.** Do not ask the open question "what is wrong
-   here". Tell it what the rules found and ask what is visible around that
-   moment. The difference in output quality is not close.
-3. **Tell the model which clock you want.** The clip is handed over with
-   offsets, so the footage it sees starts near zero, while the window you want
-   quoted is thousands of seconds into the session. Asked only to "cite
-   timestamps" it answers in clip-offset seconds, quite reasonably, and your
-   guardrail then rejects it for a question it could not have answered. Say
-   which frame of reference you want and give it the range. Measured on the
-   reference prompt: that alone was two thirds of first-attempt rejections.
-4. **Constrain the output with the schema below.** Free text cannot be built
-   on. `not_visible` must come back non-empty — models overclaim on
-   medical-adjacent video, and making honesty a required field is the fix.
-5. **Check the output before anyone sees it.** The schema fixes the shape; it
-   does not stop the model citing a timestamp it was never shown. `validate()`
-   is the guardrail, and you write it too. When it fails, tighten the prompt
-   and run again — that loop is the point of this lab.
+2. **Give the model the flag.** Not "what is wrong here" — tell it what the
+   rules found and ask what is visible around that moment. The difference in
+   output quality is not close.
 
-Two mechanics worth knowing before you start, both measured against the real
-API rather than guessed:
+3. **Say which clock you want.** The clip arrives with offsets, so the
+   footage the model sees starts near zero while the window you want quoted is
+   thousands of seconds into the session. Asked only to "cite timestamps" it
+   answers in clip-offset seconds — reasonably — and your guardrail rejects it
+   for a question it could not answer. Two thirds of first-attempt rejections,
+   measured, until the reference prompt named the range.
 
-* **Getting the clip to the model is done for you.** Call
-  `lab.clips.resolve_clip(clip_id)` and you get a Files API URI that works with
-  whichever key you are using. The Gemini API cannot read `gs://`, uploads live
-  only 48 hours, and pre-uploaded files belong to the project their key came
-  from — `resolve_clip` handles all three and falls back to uploading a local
-  copy when it has to.
-* **Window the video, and use the window the rules give you.** Flagged segments
-  run from 4 to 45 minutes; sending one whole costs about 170,000 tokens. Every
-  `Deviation` carries a `watch_window` — 40 seconds around the instant that
-  explains the flag — which costs about 10,000. That is a 16-fold saving and it
-  is what keeps twenty-five people inside a shared rate limit.
-* **Expect one warning, and switch it off properly.** The SDK enables automatic
-  function calling by default, so it logs an AFC warning even on a call that
-  passes no tools. Pass
-  `automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True)`
-  in your `GenerateContentConfig`. Nothing here should be calling a tool — that
-  is Lab 3's job — so saying so is the honest fix rather than muting the log.
+4. **Constrain the shape.** The schema below is given. ``not_visible`` must
+   come back non-empty: models overclaim on medical-adjacent video, and making
+   honesty a required field is the fix.
 
-**Say what you are doing, so the interface can show it.** Press *Explain this
-moment* and a panel opens listing each step as it happens. The supplied parts
-already report themselves — finding the clip, checking the instructors' upload
-is still live, uploading your own copy, hitting the cache. **The middle is
-yours**, and without a line from you it goes quiet exactly where the
-interesting work is::
+5. **Check it before anyone sees it.** The schema fixes the shape, not the
+   content: nothing stops a cited timestamp the model was never shown.
+   ``validate()`` is yours to write too, and when it fires, tighten the prompt
+   and run again.
 
-    from lab import trace
+Two things are done for you. ``lab.clips.resolve_clip()`` gets the clip to the
+model whichever key you hold — the Gemini API cannot read ``gs://``, uploads
+live 48 hours, and files belong to one project. And results are cached to
+disk, so iterating on a prompt is free.
 
-    trace.step(f"sending {t_end - t_start:.0f}s to {config.model()}")
-    ...
-    trace.step("guardrail passed")
+Call ``lab.trace.step("...")`` as you go and the interface prints your steps
+live. The supplied parts already report themselves; the middle is yours.
 
-Worth doing for yourself as much as for the display: when a slow run and a
-broken run look identical, "it is not working" is the only report you can
-give. Nothing listens outside the interface, so these cost nothing in a script
-or a test.
+A reference implementation is in ``solutions/``. Reading it after you have
+tried is a normal move.
 
-A reference implementation is in `solutions/`. Using it is a normal move, not
-a defeat — but write your own prompt first.
 """
 
 from __future__ import annotations
