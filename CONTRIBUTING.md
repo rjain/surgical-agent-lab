@@ -73,8 +73,10 @@ pytest -q                # 90 tests, no key, no tokens
 python preflight.py      # 10 checks, none billed
 ```
 
-CI runs the same on 3.10 and 3.12. The floor is 3.10 because that is what
-`google-adk` declares; testing it is what makes the README's claim true.
+CI runs the same on 3.11 and 3.12. The floor is **3.11**, set by
+`pandas 3.0.5` rather than by anything Google ships: ADK, `google-genai` and
+Streamlit all declare `>=3.10`, so reading only theirs gives the wrong answer.
+CI caught that on its first run, having been added for a different reason.
 
 ## The recurring task
 

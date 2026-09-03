@@ -16,9 +16,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 3.10 is the floor google-adk declares. Testing it here is what makes
-        # the claim in the README true rather than assumed.
-        python: ["3.10", "3.12"]
+        # 3.11 is the real floor, set by pandas 3.0.5 rather than by ADK,
+        # which declares >=3.10. The first run of this workflow failed on 3.10
+        # and that is how we found out, so keep the lower bound tested.
+        python: ["3.11", "3.12"]
     steps:
       - uses: actions/checkout@v4
 

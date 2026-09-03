@@ -1,5 +1,8 @@
 # Fully pinned. Generated from the verified environment on 2026-09-01.
-# Python >= 3.10 (google-adk 2.8.0 declares requires_python >=3.10).
+# Python >= 3.11. google-adk, google-genai and streamlit all declare >=3.10,
+# but pandas 3.0.5 declares >=3.11 and is the binding pin. A 3.10 install
+# fails at `pip install` with "No matching distribution found for
+# pandas==3.0.5". CI proves this on both versions.
 
 google-adk==2.8.0
 google-genai==2.21.0
