@@ -222,6 +222,7 @@ def step_oscillations(case: Case, metrics: pd.DataFrame) -> list[Deviation]:
             continue
         if first.part != repeat.part:
             continue
+        gap_min = (repeat.start_s - first.end_s) / 60
         out.append(
             Deviation(
                 case_id=case.case_id,
@@ -232,8 +233,15 @@ def step_oscillations(case: Case, metrics: pd.DataFrame) -> list[Deviation]:
                 rule_id="step_oscillation",
                 score=0.5,
                 evidence=(
-                    f"returned to {repeat.task!r} after {middle.task!r} "
-                    f"ran for {middle.duration_s / 60:.1f} min in between"
+                    # Both numbers, because they are very different and the
+                    # second one alone reads stronger than it is. The middle
+                    # step's own duration says nothing about how much time
+                    # actually passed: these labels are islands, covering
+                    # under a fifth of most sessions, so an A-B-A can span
+                    # more than an hour of unlabelled work.
+                    f"returned to {repeat.task!r} {gap_min:.1f} min later; "
+                    f"{middle.task!r} ({middle.duration_s / 60:.1f} min) was "
+                    "the only step labelled in between"
                 ),
                 # the start of the second attempt is the interesting part
                 focus_s=float(repeat.start_s) + FOCUS_WINDOW_S / 2,
@@ -267,7 +275,10 @@ RULE_INTENT = {
     "step_oscillation": (
         "A step that was returned to after a different step ran in between. "
         "Going back suggests the first attempt did not finish the job, and "
-        "the footage either side is usually where the reason shows."
+        "the footage either side is usually where the reason shows. Weigh it "
+        "by the elapsed gap: these labels cover under a fifth of a session, "
+        "so a long gap means plenty happened that nobody labelled and the "
+        "return may not be a return at all."
     ),
     "unknown_instrument": (
         "An instrument was mounted but the logs do not identify it. Nothing "
