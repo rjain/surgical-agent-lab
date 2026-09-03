@@ -309,3 +309,36 @@ def test_participant_files_still_need_writing():
 def test_the_dataset_is_actually_present():
     cases = list_cases()
     assert len(cases) > 0, "no cases found — is LAB_DATA_DIR set correctly?"
+
+
+def test_every_rule_explains_what_it_looks_for():
+    """A measurement without the rule's intent is not readable.
+
+    "returned to Suturing after 1.5 min" is unremarkable until you know the
+    rule was looking for exactly that, which is what a participant told us
+    after ten minutes in Lab 1. So every rule that can fire carries a
+    plain-language statement of what it is looking for, and this keeps the two
+    lists from drifting apart.
+    """
+    from lab.rules import RULE_INTENT, rule_intent
+
+    fired = {d.rule_id for case in list_cases()[:40] for d in find_deviations(case)}
+    assert fired, "no rule fired across 40 cases — something else is wrong"
+
+    missing = fired - set(RULE_INTENT)
+    assert not missing, f"these rules fire but explain nothing: {sorted(missing)}"
+
+    for rule_id, text in RULE_INTENT.items():
+        assert len(text) > 60, f"{rule_id}'s intent is too terse to help"
+        assert rule_intent(rule_id) == text
+
+    # An unknown rule returns empty rather than raising: the interface prints
+    # the evidence alone rather than breaking on a rule someone just added.
+    assert rule_intent("no_such_rule") == ""
+
+
+def test_the_swap_threshold_named_in_prose_matches_the_constant():
+    """The intent quotes the threshold, so tuning the constant must update it."""
+    from lab.rules import RULE_INTENT, SWAP_CHANGES
+
+    assert f"{SWAP_CHANGES} or more changes" in RULE_INTENT["swap_rate"]

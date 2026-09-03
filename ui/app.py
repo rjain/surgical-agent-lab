@@ -33,7 +33,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from lab.data import list_cases, load_case, overlapping_tools  # noqa: E402
 from lab.metrics import session_summary, step_metrics  # noqa: E402
-from lab.rules import find_deviations  # noqa: E402
+from lab.rules import find_deviations, rule_intent  # noqa: E402
 
 # Prepared for the lab and verified to contain flags worth discussing. Shown
 # first so nobody's first impression is a session with nothing in it.
@@ -206,7 +206,12 @@ def render_session(case_id: str) -> None:
         window = f"{dev.start_s / 60:.1f}–{dev.end_s / 60:.1f} min"
         label = f"{dev.rule_id} — {dev.step} — {window}"
         with st.expander(label, expanded=False):
-            st.write(f"**Evidence.** {dev.evidence}")
+            # Two halves, and neither works alone: the intent says what the
+            # rule was looking for, the evidence says what it found. Without
+            # the first, "returned to Suturing" reads as unremarkable.
+            if intent := rule_intent(dev.rule_id):
+                st.write(f"**What this rule looks for.** {intent}")
+            st.write(f"**What it found here.** {dev.evidence}")
             st.caption(f"score {dev.score} · an efficiency observation, not a clinical finding")
             during = overlapping_tools(case.tools, dev.part, dev.start_s, dev.end_s)
             st.dataframe(

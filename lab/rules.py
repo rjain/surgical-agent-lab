@@ -243,6 +243,43 @@ def step_oscillations(case: Case, metrics: pd.DataFrame) -> list[Deviation]:
 
 
 #: Every rule the engine runs, in the order results are reported.
+#: What each rule is looking for, in words, and the threshold it uses.
+#:
+#: The measurement in ``evidence`` says what happened. It does not say why
+#: anyone should care, and "returned to Suturing" reads as unremarkable until
+#: you know the rule was looking for exactly that. Both halves are needed, so
+#: the interface prints this above the evidence.
+#:
+#: Keep these in step with the constants above if you tune a threshold.
+RULE_INTENT = {
+    "swap_rate": (
+        "A step with an unusual amount of instrument changing. Swapping is "
+        f"normal; {SWAP_CHANGES} or more changes beginning inside one step "
+        "often means the plan for that step changed while it was under way."
+    ),
+    "step_overrun": (
+        "A step that took substantially longer than the same step usually "
+        f"takes across the corpus. Fires past {OVERRUN_RATIO:g}x the median, "
+        "so it is a comparison against peers rather than against a target."
+    ),
+    "step_oscillation": (
+        "A step that was returned to after a different step ran in between. "
+        "Going back suggests the first attempt did not finish the job, and "
+        "the footage either side is usually where the reason shows."
+    ),
+    "unknown_instrument": (
+        "An instrument was mounted but the logs do not identify it. Nothing "
+        "is necessarily wrong; it means the record is incomplete, so any "
+        "count of what was used that step is a lower bound."
+    ),
+}
+
+
+def rule_intent(rule_id: str) -> str:
+    """What a rule looks for, in words. Empty string if the rule is unknown."""
+    return RULE_INTENT.get(rule_id, "")
+
+
 RULES = (
     swap_rate_outliers,
     step_overruns,
