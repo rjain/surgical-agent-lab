@@ -1,0 +1,44 @@
+name: tests
+
+# The point of this workflow is not only that the tests pass. It is that
+# `lab/` still contains exercises rather than answers: it is easy to copy a
+# reference solution over a skeleton while working, and easy to forget. That
+# check runs here so nobody has to remember it.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.10 is the floor google-adk declares. Testing it here is what makes
+        # the claim in the README true rather than assumed.
+        python: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+
+      - name: Install
+        run: pip install -r requirements.txt
+
+      - name: Fetch the dataset
+        run: python -m lab.get_data
+
+      - name: The skeletons must still be skeletons
+        run: |
+          pytest -q tests/test_supplied.py::test_participant_files_still_need_writing
+          echo "lab/ still contains exercises, not answers"
+
+      - name: Everything else
+        # No key is set, so nothing here can spend a token: the suite is built
+        # to run without one.
+        run: pytest -q
