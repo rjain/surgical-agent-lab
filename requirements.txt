@@ -1,8 +1,18 @@
 # Fully pinned. Generated from the verified environment on 2026-09-01.
-# Python >= 3.11. google-adk, google-genai and streamlit all declare >=3.10,
-# but pandas 3.0.5 declares >=3.11 and is the binding pin. A 3.10 install
-# fails at `pip install` with "No matching distribution found for
-# pandas==3.0.5". CI proves this on both versions.
+# Python >= 3.12.
+#
+# Determined by checking all 75 pins, not the headline ones. The floor is set
+# by a transitive dependency nobody would think to look at:
+#
+#   numpy    2.5.2  >=3.12   <- binding
+#   pandas   3.0.5  >=3.11
+#   rpds-py         >=3.11
+#   google-adk, google-genai, streamlit  >=3.10
+#   pydantic        >=3.9
+#
+# Reading google-adk gives 3.10 and Python 3.10 fails at `pip install`.
+# Reading pandas gives 3.11 and 3.11 also fails. Both were tried, in that
+# order, before anyone counted properly. CI tests 3.12 so this stays honest.
 
 google-adk==2.8.0
 google-genai==2.21.0

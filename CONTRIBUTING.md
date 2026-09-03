@@ -73,10 +73,12 @@ pytest -q                # 90 tests, no key, no tokens
 python preflight.py      # 10 checks, none billed
 ```
 
-CI runs the same on 3.11 and 3.12. The floor is **3.11**, set by
-`pandas 3.0.5` rather than by anything Google ships: ADK, `google-genai` and
-Streamlit all declare `>=3.10`, so reading only theirs gives the wrong answer.
-CI caught that on its first run, having been added for a different reason.
+CI runs the same on 3.12 and 3.13. The floor is **3.12**, set by
+`numpy 2.5.2`. That answer took two wrong ones first: `google-adk` says
+`>=3.10`, `pandas` says `>=3.11`, and both were shipped as the floor before
+anyone checked all 75 pins. **If you change a pin, re-derive the floor from
+every pin, not from the one you changed.** CI failing on the lower matrix
+version is the backstop.
 
 ## The recurring task
 

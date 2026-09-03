@@ -38,10 +38,10 @@ from pathlib import Path
 
 from lab import config
 
-#: Set by pandas 3.0.5, not by anything Google ships: ADK, google-genai and
-#: Streamlit all declare >=3.10, so reading only theirs gives 3.10 and a
-#: participant then fails at `pip install`. CI tests both versions.
-MIN_PYTHON = (3, 11)
+#: Set by numpy 2.5.2 (>=3.12), found by checking every pin rather than the
+#: obvious ones: google-adk says >=3.10, pandas says >=3.11, and both of those
+#: answers were shipped and were wrong. CI tests 3.12.
+MIN_PYTHON = (3, 12)
 STREAMLIT_PORT = 8501
 
 PASS, FAIL, SKIP, WARN = "PASS", "FAIL", "SKIP", "WARN"
