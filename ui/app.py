@@ -86,6 +86,30 @@ def _load_auditor():
 # --------------------------------------------------------------------------
 
 
+@st.cache_data(show_spinner=False)
+def _clip_ids() -> set[str]:
+    """Clip ids the manifest knows about. Local file, no network."""
+    try:
+        from lab.clips import load_manifest
+
+        return set(load_manifest())
+    except Exception:
+        return set()
+
+
+def has_clip(dev) -> bool:
+    """Whether footage was cut for this flagged moment.
+
+    Clips exist only for the curated sessions, so the other 149 sessions have
+    flags with nothing to look at. Checking the manifest up front keeps that a
+    fact about the data rather than an exception a participant has to read.
+    """
+    from lab.clips import find_for_window
+
+    clip = find_for_window(dev.case_id, dev.part, *dev.watch_window)
+    return clip is not None
+
+
 def build_timeline(case, metrics: pd.DataFrame, deviations, part: int):
     """Layered chart: step bands, one lane per arm, a mark per flag.
 
@@ -204,7 +228,12 @@ def render_session(case_id: str) -> None:
 
     for i, dev in enumerate(here):
         window = f"{dev.start_s / 60:.1f}–{dev.end_s / 60:.1f} min"
+        clip_ready = has_clip(dev)
+        # Say it in the label, where the eye already is, rather than letting
+        # someone open the moment and press a button that cannot work.
         label = f"{dev.rule_id} — {dev.step} — {window}"
+        if not clip_ready:
+            label += "   ·   no clip available"
         with st.expander(label, expanded=False):
             # Two halves, and neither works alone: the intent says what the
             # rule was looking for, the evidence says what it found. Without
@@ -220,6 +249,17 @@ def render_session(case_id: str) -> None:
                 hide_index=True,
             )
             lo, hi = dev.watch_window
+            if not clip_ready:
+                # Detection needed no footage, which is the whole point of
+                # Lab 1 — so this is a limit of the prepared data, not a fault.
+                st.info(
+                    "**No clip for this moment.** Everything above was measured "
+                    "from the logs alone, which is why it works on all 155 "
+                    "sessions. Footage was only cut for the sessions marked "
+                    "`· prepared` in the picker — switch to one of those to try "
+                    "Lab 2."
+                )
+                continue
             st.caption(
                 f"Watch window {lo:.0f}–{hi:.0f}s — the 40 seconds around the "
                 "instant that explains this flag, which is what gets sent."
@@ -481,6 +521,9 @@ def main() -> None:
         ordered,
         index=0,
         format_func=lambda c: f"{c}  ·  prepared" if c in prepared else c,
+        # Named so the tests can drive it; Streamlit needs a key to accept a
+        # pre-set value from session state.
+        key="session_pick",
     )
     st.sidebar.caption(
         f"{len(prepared)} prepared for the lab, {len(others)} others available"

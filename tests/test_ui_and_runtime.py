@@ -324,3 +324,56 @@ def test_extensions_are_read_from_the_manifest_and_the_directory(tmp_path, monke
     # and a corrupt manifest falls back rather than crashing
     (root / "extensions.json").write_text("{ not json")
     assert preflight._antigravity_extension_ids() == {"ms-python.python"}
+
+
+# --------------------------------------------------------------------------
+# sessions without footage — 149 of the 155, so participants will land on one
+# --------------------------------------------------------------------------
+
+
+def test_a_session_without_clips_still_shows_its_flagged_moments(app):
+    """Detection needs no footage, so Lab 1 must work on all 155 sessions.
+
+    Drives the real picker rather than the default, which is a curated
+    session and would make this pass without touching the case it names.
+    """
+    at = app(**{"session_pick": "case_001"})
+    assert not at.exception, at.exception
+    assert at.session_state["session_pick"] == "case_001"
+
+    flags = next(m for m in at.metric if m.label == "Flagged moments")
+    assert int(flags.value) > 0, "case_001 has flags; Lab 1 does not need footage"
+
+    # and the moment says why it cannot be explained, rather than offering to
+    labels = " ".join(e.label for e in at.expander)
+    assert "no clip available" in labels
+    assert not any("Explain this moment" in b.label for b in at.button)
+
+
+def test_an_unprepared_session_says_so_and_offers_no_button(app):
+    """The failure a participant would otherwise find by pressing a button.
+
+    case_001 has flags and no clips. The old behaviour offered "Explain this
+    moment", then answered with a ClipUnavailable naming five clip ids from a
+    different session, in red — which reads as a bug rather than a choice.
+    """
+    from lab.clips import find_for_window
+    from lab.rules import find_deviations
+
+    devs = find_deviations("case_001")
+    assert devs, "case_001 should still produce flags"
+    assert all(
+        find_for_window(d.case_id, d.part, *d.watch_window) is None for d in devs
+    ), "case_001 is the unprepared example; it must have no clips"
+
+
+def test_a_prepared_session_does_have_clips(app):
+    """The other half of the same claim, so the check cannot pass vacuously."""
+    from lab.clips import find_for_window
+    from lab.rules import find_deviations
+
+    devs = find_deviations("case_129")
+    assert devs
+    assert all(
+        find_for_window(d.case_id, d.part, *d.watch_window) is not None for d in devs
+    ), "case_129 is curated; every flag should have footage"
