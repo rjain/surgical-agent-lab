@@ -129,9 +129,17 @@ terminal — worth knowing if `source .venv/bin/activate` is where you get stuck
 ### The agent, and one rule for it
 
 `AGENTS.md` orients the IDE's agent: what is supplied, what you write, the
-traps in the data, and the rules it must not break — chiefly that it must never
-invent a number. Antigravity reads it at the workspace root (it also reads
-`GEMINI.md` and `.agents/rules`, and shows each as its own source).
+traps in the data, and the rules it must not break, chiefly that it must never
+invent a number.
+
+**`AGENTS.md` is the file Antigravity actually feeds to the agent.** Its
+instruction loader globs `**/AGENTS.md` and adds each one as an instruction;
+there is no equivalent glob for anything else. A workspace `GEMINI.md` is
+*shown* in its settings panel but is not loaded that way — the `GEMINI.md`
+Antigravity reads as memory is the per-user one at `~/.gemini/GEMINI.md`, not
+one in a repository. So this repo has no `GEMINI.md`, deliberately: it would
+be read by people and ignored by the agent, which is worse than not having
+one.
 
 **Do not paste your API key into the agent chat.** The agent already reads your
 workspace, including `.env`, so it has no need of the key quoted at it — and
