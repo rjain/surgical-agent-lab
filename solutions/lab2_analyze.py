@@ -33,7 +33,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from lab import cache, clips, config
+from lab import cache, clips, config, trace
 from lab.rules import find_deviations
 
 # --- schema ----------------------------------------------------------------
@@ -224,6 +224,11 @@ def analyze_clip(
 
     last_error: Exception | None = None
     for attempt in (1, 2):
+        trace.step(
+            f"sending {hi - lo:.0f}s to {config.model()}"
+            if attempt == 1
+            else "guardrail rejected that answer — asking again with the reason"
+        )
         text = prompt if attempt == 1 else (
             prompt
             + "\n\nYour previous answer was rejected: "
@@ -245,8 +250,10 @@ def analyze_clip(
             config=gen_config,
         )
         notes = TechniqueNotes.model_validate_json(reply.text)
+        trace.step(f"got {len(notes.observations)} observations, checking them")
         try:
             validate(notes, lo, hi)
+            trace.step("guardrail passed")
             return notes
         except GuardrailViolation as exc:
             last_error = exc

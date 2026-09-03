@@ -48,6 +48,24 @@ API rather than guessed:
   in your `GenerateContentConfig`. Nothing here should be calling a tool — that
   is Lab 3's job — so saying so is the honest fix rather than muting the log.
 
+**Say what you are doing, so the interface can show it.** Press *Explain this
+moment* and a panel opens listing each step as it happens. The supplied parts
+already report themselves — finding the clip, checking the instructors' upload
+is still live, uploading your own copy, hitting the cache. **The middle is
+yours**, and without a line from you it goes quiet exactly where the
+interesting work is::
+
+    from lab import trace
+
+    trace.step(f"sending {t_end - t_start:.0f}s to {config.model()}")
+    ...
+    trace.step("guardrail passed")
+
+Worth doing for yourself as much as for the display: when a slow run and a
+broken run look identical, "it is not working" is the only report you can
+give. Nothing listens outside the interface, so these cost nothing in a script
+or a test.
+
 A reference implementation is in `solutions/`. Using it is a normal move, not
 a defeat — but write your own prompt first.
 """

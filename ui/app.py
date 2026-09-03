@@ -33,6 +33,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from lab.data import list_cases, load_case, overlapping_tools  # noqa: E402
 from lab.metrics import session_summary, step_metrics  # noqa: E402
+from lab import trace  # noqa: E402
 from lab.rules import find_deviations, rule_intent  # noqa: E402
 
 # Prepared for the lab and verified to contain flags worth discussing. Shown
@@ -281,18 +282,26 @@ def render_session(case_id: str) -> None:
                         "Once `analyze_clip` exists, its notes appear here."
                     )
                 else:
-                    with st.spinner("Asking Gemini about this window…"):
+                    # Expanded, and it stays open afterwards. The steps are
+                    # the lesson as much as the notes are: one call is really
+                    # five things, and a slow run and a broken run look
+                    # identical behind a spinner.
+                    with st.status("Explaining this moment…", expanded=True) as status:
                         try:
-                            # part, then offsets within that part — the whole
-                            # segment would be 45 minutes of video.
-                            notes = analyze(dev.case_id, dev.part, lo, hi)
+                            with trace.listening(lambda m: status.write(m)):
+                                # part, then offsets within that part — the
+                                # whole segment would be 45 min of video.
+                                notes = analyze(dev.case_id, dev.part, lo, hi)
+                            status.update(label="Explained", state="complete")
                             render_notes(notes)
                         except NotImplementedError:
+                            status.update(label="Not written yet", state="error")
                             st.warning(
                                 "`analyze_clip` is still a skeleton — that is "
                                 "Lab 2. Its notes appear here once you write it."
                             )
                         except Exception as exc:
+                            status.update(label="Failed", state="error")
                             st.error(f"{type(exc).__name__}: {exc}")
 
     with st.expander("All measurements for this part"):

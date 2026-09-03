@@ -15,6 +15,7 @@ Run with::
 
 from __future__ import annotations
 
+import contextlib
 import sys
 from pathlib import Path
 
@@ -427,3 +428,61 @@ def test_a_session_with_flags_still_carries_its_band_and_arm_data():
     rows = [len(datasets[L["data"]["name"]]) for L in spec["layer"]]
     assert all(n > 0 for n in rows), f"a layer rendered with no rows: {rows}"
     assert len(spec["layer"]) == 3, "case_001 has flags, so it should have three layers"
+
+
+# --------------------------------------------------------------------------
+# lab/trace.py — making the pipeline visible while it runs
+# --------------------------------------------------------------------------
+
+
+def test_steps_go_nowhere_when_nobody_is_listening():
+    """Scripts and tests call the same code; it must cost nothing there."""
+    from lab import trace
+
+    trace.step("this should vanish")
+    assert trace._listeners == []
+
+
+def test_a_listener_receives_steps_in_order_and_is_removed_after():
+    from lab import trace
+
+    seen = []
+    with trace.listening(seen.append):
+        trace.step("first")
+        trace.step("second")
+    trace.step("after")
+    assert seen == ["first", "second"]
+    assert trace._listeners == []
+
+
+def test_a_broken_listener_cannot_break_the_pipeline_it_watches():
+    """The display is a bystander. It must never take down the work."""
+    from lab import trace
+
+    def explode(_):
+        raise RuntimeError("the UI fell over")
+
+    seen = []
+    with trace.listening(explode), trace.listening(seen.append):
+        trace.step("still delivered to the good listener")
+    assert seen == ["still delivered to the good listener"]
+
+
+def test_the_listener_is_removed_even_if_the_body_raises():
+    from lab import trace
+
+    with contextlib.suppress(ValueError):
+        with trace.listening(lambda m: None):
+            raise ValueError("boom")
+    assert trace._listeners == []
+
+
+def test_the_supplied_pipeline_reports_its_own_steps():
+    """Clip resolution and the cache announce themselves, so a participant
+    who writes no trace calls still sees the surrounding work."""
+    import inspect
+
+    from lab import cache, clips
+
+    assert "trace.step" in inspect.getsource(clips.resolve_clip)
+    assert "trace.step" in inspect.getsource(cache.disk_cached)

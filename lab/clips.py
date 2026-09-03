@@ -29,6 +29,7 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
+from lab import trace
 from lab.config import REPO_ROOT, client
 
 #: Written by the instructor pipeline, committed so you inherit the URIs.
@@ -149,6 +150,7 @@ def resolve_clip(clip_id: str) -> str:
         ClipUnavailable: if no route works, naming which ones were tried.
     """
     if clip_id in _resolved:
+        trace.step(f"clip {clip_id} already resolved this session")
         return _resolved[clip_id]
 
     manifest = load_manifest()
@@ -160,14 +162,21 @@ def resolve_clip(clip_id: str) -> str:
         )
 
     # 1 — the instructors' pre-upload, if this key can see it.
-    if clip.uri and _uri_is_reachable(clip.uri):
-        _resolved[clip_id] = clip.uri
-        return clip.uri
+    if clip.uri:
+        trace.step(f"checking the pre-uploaded {clip_id} is still live")
+        if _uri_is_reachable(clip.uri):
+            trace.step(f"using the pre-upload, {clip.end_s - clip.start_s:.0f}s of footage")
+            _resolved[clip_id] = clip.uri
+            return clip.uri
+        trace.step("the pre-upload has expired or belongs to another project")
 
     # 2 — our own copy.
     path = _local_path(clip)
     if path is not None:
+        trace.step(f"uploading your own copy of {path.name} "
+                   f"({path.stat().st_size / 1e6:.1f} MB)")
         uri = _upload(path)
+        trace.step("upload finished and the file is ACTIVE")
         _resolved[clip_id] = uri
         return uri
 

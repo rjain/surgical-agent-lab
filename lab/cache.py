@@ -26,6 +26,7 @@ import json
 from pathlib import Path
 from typing import Any, Callable
 
+from lab import trace
 from lab.config import REPO_ROOT
 
 CACHE_DIR = REPO_ROOT / ".cache"
@@ -74,12 +75,16 @@ def disk_cached(name: str) -> Callable:
             if path.is_file():
                 try:
                     stored = json.loads(path.read_text())
+                    # Worth announcing: a cached run returns in milliseconds,
+                    # and without this it looks like the model got faster.
+                    trace.step(f"cache hit, {path.name[:12]} — no model call")
                     if hasattr(model, "model_validate"):
                         return model.model_validate(stored)
                     return stored
                 except Exception:
                     path.unlink(missing_ok=True)  # corrupt entry, just redo it
 
+            trace.step("nothing cached for this window, calling the model")
             result = func(*args, **kwargs)
             try:
                 payload = (
