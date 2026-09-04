@@ -41,8 +41,8 @@ disk, so iterating on a prompt is free.
 Call ``lab.trace.step("...")`` as you go and the interface prints your steps
 live. The supplied parts already report themselves; the middle is yours.
 
-A reference implementation is in ``solutions/``. Reading it after you have
-tried is a normal move.
+Write it before you look anything up. The docstrings below say what each
+piece has to do, and the tests say when it does it.
 
 """
 
@@ -122,8 +122,8 @@ def validate(notes: TechniqueNotes, t_start: float, t_end: float) -> None:
         GuardrailViolation: naming the specific check that failed.
     """
     raise NotImplementedError(
-        "Lab 2: write the guardrail. See the docstring above for the four "
-        "checks, and solutions/ for one way to do it."
+        "Lab 2: write the guardrail. The docstring above names the four "
+        "checks it has to make."
     )
 
 
@@ -149,6 +149,5 @@ def analyze_clip(
     """
     raise NotImplementedError(
         "Lab 2: build a Gemini call that returns TechniqueNotes, then run it "
-        "through validate(). See the module docstring, and solutions/ if you "
-        "get stuck."
+        "through validate(). The module docstring has the shape of it."
     )
