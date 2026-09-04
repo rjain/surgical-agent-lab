@@ -22,6 +22,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from lab import opi
 from lab.data import (
     Case,
     list_cases,
@@ -33,6 +34,42 @@ from lab.data import (
 # Median duration per task step across the whole corpus, precomputed by
 # the instructor pipeline so participants do not wait on 155 cases at import.
 _COHORT_PATH = Path(__file__).with_name("cohort.json")
+
+
+
+#: Which fields this lab computes correspond to a console metric, and which
+#: are the lab's own. The near miss is deliberate: the console's
+#: ``arm_swap_freq`` is the surgeon changing which arm the hand controllers
+#: drive, not an instrument being exchanged, so ``swaps_per_min`` is not it.
+_CONSOLE_FIELDS = {
+    "duration_s": "duration",
+    "duration_tool": "duration_tool",
+    "duration_armxtool": "duration_armxtool",
+}
+
+_LAB_ONLY_NOTE = "not a console metric"
+
+
+def _glossary(fields) -> dict[str, dict]:
+    """Explain each returned field, in the console's words where there are any.
+
+    Args:
+        fields: the field names present in the payload.
+    """
+    out = {}
+    for field in fields:
+        console_name = _CONSOLE_FIELDS.get(field)
+        entry = opi.describe(console_name) if console_name else None
+        if entry:
+            out[field] = {
+                "console_name": entry["metric_name"],
+                "display_name": entry["display_name"],
+                "definition": entry["description"],
+                "source": "console",
+            }
+        else:
+            out[field] = {"source": "lab", "note": _LAB_ONLY_NOTE}
+    return out
 
 
 @lru_cache(maxsize=1)
@@ -192,30 +229,66 @@ def session_summary(case: Case) -> dict:
     }
 
 
-def get_metrics(case_id: str, step: str | None = None) -> dict:
+def get_metrics(
+    case_id: str, step: str | None = None, metric: str | None = None
+) -> dict:
     """Timing and tool-usage measurements for a session, or one step of it.
 
     Use this to answer questions about how long something took or how much
     instrument swapping happened. Every number returned is measured from the
     session labels — none of it is estimated.
 
+    The reply carries a ``glossary`` explaining each field, and giving the
+    console's own name and definition for the fields that have one.
+
     Args:
         case_id: the session identifier, e.g. ``"case_045"``.
         step: optional task step name, e.g. ``"Suturing"``. When given, only
             segments of that step are returned. When omitted, the whole
             session is summarised.
+        metric: optional console metric name, e.g. ``"duration_armxtool"``.
+            Most console metrics cannot be computed from these labels; asking
+            for one of those returns an explanation and no number.
     """
+    if metric is not None:
+        entry = opi.describe(metric)
+        if entry is None:
+            return {
+                "unknown_metric": metric,
+                "hint": "the console does not publish a metric by that name",
+            }
+        if not entry["derivable"]:
+            return {
+                "unavailable": metric,
+                "display_name": entry["display_name"],
+                "definition": entry["description"],
+                "reason": (
+                    "requires console telemetry; these labels record instrument "
+                    "mounting, not motion, force or pedal use"
+                ),
+            }
+
     case = load_case(case_id)
+
     if step is None:
-        return session_summary(case)
+        summary = session_summary(case)
+        summary["glossary"] = _glossary(summary)
+        return summary
 
     metrics = step_metrics(case)
     matching = metrics[metrics["task"].str.lower() == step.lower()]
     if matching.empty:
         available = sorted(metrics["task"].unique())
         return {"error": f"no step named {step!r}", "available_steps": available}
-    return {
-        "case_id": case_id,
-        "step": step,
-        "segments": matching.to_dict("records"),
-    }
+
+    segments = matching.to_dict("records")
+    for record in segments:
+        record.update(
+            install_durations(case, record["part"], record["start_s"], record["end_s"])
+        )
+
+    payload = {"case_id": case_id, "step": step, "segments": segments}
+    if metric is not None:
+        payload["metric"] = metric
+    payload["glossary"] = _glossary(segments[0])
+    return payload

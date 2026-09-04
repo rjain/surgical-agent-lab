@@ -98,3 +98,43 @@ def test_install_durations_never_exceeds_the_window_per_arm():
     assert out["duration_armxtool"]["USM3 needle driver"] == pytest.approx(
         window, rel=1e-6
     )
+
+
+from lab.metrics import get_metrics
+
+
+def test_glossary_covers_every_step_field():
+    result = get_metrics(GOLDEN, step="Suturing")
+    fields = set(result["segments"][0])
+    assert fields <= set(result["glossary"]), fields - set(result["glossary"])
+
+
+def test_glossary_names_the_console_metric_for_duration():
+    entry = get_metrics(GOLDEN, step="Suturing")["glossary"]["duration_s"]
+    assert entry["source"] == "console"
+    assert entry["console_name"] == "duration"
+    assert "total time spent" in entry["definition"].lower()
+
+
+def test_glossary_marks_lab_only_fields():
+    entry = get_metrics(GOLDEN, step="Suturing")["glossary"]["swaps_per_min"]
+    assert entry["source"] == "lab"
+
+
+def test_unsupported_metric_returns_no_number():
+    result = get_metrics(GOLDEN, metric="active_any_ratio_ssc")
+    assert result["unavailable"] == "active_any_ratio_ssc"
+    assert result["display_name"] == "console movement %"
+    assert "telemetry" in result["reason"]
+    assert not any(isinstance(v, (int, float)) for v in result.values())
+
+
+def test_unknown_metric_says_so():
+    result = get_metrics(GOLDEN, metric="not_a_metric")
+    assert result["unknown_metric"] == "not_a_metric"
+
+
+def test_derivable_metric_returns_computed_values():
+    result = get_metrics(GOLDEN, step="Suturing", metric="duration_armxtool")
+    assert result["metric"] == "duration_armxtool"
+    assert result["segments"][0]["duration_armxtool"]["USM3 needle driver"] > 0

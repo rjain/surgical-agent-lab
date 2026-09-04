@@ -38,14 +38,15 @@ MODEL = config.model()
 # model sees, and one of them is not good enough.
 
 
-def get_metrics(case_id: str, step: str = "") -> dict:
+def get_metrics(case_id: str, step: str = "", metric: str = "") -> dict:
     """gets metrics
 
     Args:
         case_id: the id
         step: the step
+        metric: the metric
     """
-    return _get_metrics(case_id, step or None)
+    return _get_metrics(case_id, step or None, metric or None)
 
 
 def list_deviations(case_id: str) -> list[dict]:

@@ -104,7 +104,7 @@ def test_no_tool_schema_contains_a_type_the_api_rejects(reference):
 @pytest.mark.parametrize(
     ("name", "params"),
     [
-        ("get_metrics", ["case_id", "step"]),
+        ("get_metrics", ["case_id", "step", "metric"]),
         ("list_deviations", ["case_id"]),
         ("analyze_clip", ["case_id", "part", "t_start", "t_end"]),
     ],

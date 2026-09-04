@@ -84,7 +84,7 @@ How to answer:
 # --- the three tools -------------------------------------------------------
 
 
-def get_metrics(case_id: str, step: str = "") -> dict:
+def get_metrics(case_id: str, step: str = "", metric: str = "") -> dict:
     """Timing and instrument-usage measurements for a session, or one step of it.
 
     Use this for any question about how long something took, how a step
@@ -96,8 +96,12 @@ def get_metrics(case_id: str, step: str = "") -> dict:
         step: optional task step name, e.g. ``"Suturing"``. Leave empty to get
             a summary of the whole session, including which step ran longest
             against its corpus median.
+        metric: optional console metric name, e.g. ``"duration_armxtool"``.
+            Most of the console's metrics cannot be computed from these
+            labels; asking for one of those returns its definition and an
+            explanation instead of a number.
     """
-    return _get_metrics(case_id, step or None)
+    return _get_metrics(case_id, step or None, metric or None)
 
 
 def list_deviations(case_id: str) -> list[dict]:
