@@ -38,3 +38,63 @@ def test_only_three_metrics_are_derivable():
     assert derivable == {"duration", "duration_tool", "duration_armxtool"}
     assert opi.is_derivable("duration") is True
     assert opi.is_derivable("jerk_all") is False
+
+
+from lab.data import Case, load_case
+from lab.metrics import install_durations
+
+
+def _case_from_rows(tools_rows) -> Case:
+    tools = pd.DataFrame(
+        tools_rows, columns=["part", "start_s", "end_s", "arm", "tool"]
+    )
+    tools["commercial"] = tools["tool"]
+    tools["duration_s"] = tools["end_s"] - tools["start_s"]
+    tasks = pd.DataFrame(
+        [[1, 0.0, 100.0, "Suturing", 100.0]],
+        columns=["part", "start_s", "end_s", "task", "duration_s"],
+    )
+    return Case("case_synthetic", tasks, tools)
+
+
+def test_install_durations_clips_to_the_window():
+    case = _case_from_rows([[1, -50.0, 50.0, "USM1", "needle driver"]])
+    out = install_durations(case, part=1, start_s=0.0, end_s=100.0)
+    assert out["duration_tool"]["needle driver"] == pytest.approx(50.0)
+    assert out["duration_armxtool"]["USM1 needle driver"] == pytest.approx(50.0)
+
+
+def test_install_durations_merges_overlapping_mounts_on_one_arm():
+    case = _case_from_rows(
+        [
+            [1, 0.0, 60.0, "USM3", "needle driver"],
+            [1, 30.0, 90.0, "USM3", "needle driver"],
+        ]
+    )
+    out = install_durations(case, part=1, start_s=0.0, end_s=100.0)
+    assert out["duration_armxtool"]["USM3 needle driver"] == pytest.approx(90.0)
+    assert out["duration_tool"]["needle driver"] == pytest.approx(90.0)
+
+
+def test_install_durations_sums_the_same_tool_across_arms():
+    case = _case_from_rows(
+        [
+            [1, 0.0, 40.0, "USM1", "needle driver"],
+            [1, 0.0, 40.0, "USM3", "needle driver"],
+        ]
+    )
+    out = install_durations(case, part=1, start_s=0.0, end_s=100.0)
+    assert out["duration_armxtool"]["USM1 needle driver"] == pytest.approx(40.0)
+    assert out["duration_tool"]["needle driver"] == pytest.approx(80.0)
+
+
+def test_install_durations_never_exceeds_the_window_per_arm():
+    case = load_case(GOLDEN)
+    seg = case.tasks[case.tasks["task"] == "Suturing"].iloc[0]
+    out = install_durations(case, seg.part, seg.start_s, seg.end_s)
+    window = seg.end_s - seg.start_s
+    for key, seconds in out["duration_armxtool"].items():
+        assert seconds <= window + 1e-6, key
+    assert out["duration_armxtool"]["USM3 needle driver"] == pytest.approx(
+        window, rel=1e-6
+    )

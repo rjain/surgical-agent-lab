@@ -22,7 +22,13 @@ from pathlib import Path
 
 import pandas as pd
 
-from lab.data import Case, list_cases, load_case, tool_changes_within
+from lab.data import (
+    Case,
+    list_cases,
+    load_case,
+    overlapping_tools,
+    tool_changes_within,
+)
 
 # Median duration per task step across the whole corpus, precomputed by
 # the instructor pipeline so participants do not wait on 155 cases at import.
@@ -92,6 +98,65 @@ def step_metrics(case: Case) -> pd.DataFrame:
             }
         )
     return pd.DataFrame(rows)
+
+
+def _merged_seconds(spans: list[tuple[float, float]]) -> float:
+    """Total time covered by a set of spans, counting overlap once.
+
+    Args:
+        spans: ``(start, end)`` pairs in seconds, in any order.
+    """
+    total = 0.0
+    current_start = current_end = None
+    for start, end in sorted(spans):
+        if current_end is None or start > current_end:
+            if current_end is not None:
+                total += current_end - current_start
+            current_start, current_end = start, end
+        else:
+            current_end = max(current_end, end)
+    if current_end is not None:
+        total += current_end - current_start
+    return total
+
+
+def install_durations(
+    case: Case, part: int, start_s: float, end_s: float
+) -> dict[str, dict[str, float]]:
+    """How long each instrument was installed during a window.
+
+    These are the console's ``duration_tool`` and ``duration_armxtool``, two
+    of the three OPI metrics SurgVU labels can support. Spans are clipped to
+    the window, and overlapping mounts of the same instrument on the same arm
+    are counted once: the labels occasionally record two mounts of one
+    instrument on one arm at the same time, and adding them would credit an
+    arm with more time than the window contains.
+
+    Args:
+        case: a loaded case, from :func:`lab.data.load_case`.
+        part: the video part the window belongs to.
+        start_s: window start, seconds within that part.
+        end_s: window end, seconds within that part.
+
+    Returns:
+        ``{"duration_tool": {tool: seconds}, "duration_armxtool":
+        {"USM3 needle driver": seconds}}``.
+    """
+    during = overlapping_tools(case.tools, part, start_s, end_s)
+
+    per_arm_spans: dict[str, list[tuple[float, float]]] = {}
+    for row in during.itertuples():
+        span = (max(row.start_s, start_s), min(row.end_s, end_s))
+        per_arm_spans.setdefault(f"{row.arm} {row.tool}", []).append(span)
+
+    per_arm = {key: _merged_seconds(spans) for key, spans in per_arm_spans.items()}
+
+    per_tool: dict[str, float] = {}
+    for key, seconds in per_arm.items():
+        tool = key.split(" ", 1)[1]
+        per_tool[tool] = per_tool.get(tool, 0.0) + seconds
+
+    return {"duration_tool": per_tool, "duration_armxtool": per_arm}
 
 
 def session_summary(case: Case) -> dict:
