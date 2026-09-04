@@ -168,11 +168,24 @@ the lab on the two layers above it.
 | `lab/metrics.py` | per-step measurements, corpus comparison |
 | `lab/rules.py` | the deterministic deviation engine — Lab 1, complete |
 | `lab/cohort.json` | corpus medians, built from all 155 cases |
+| `lab/opi.py` | the console's metric vocabulary, 109 definitions, no values |
 | `lab/clips.py` | gets a clip to the model, whichever key you hold |
 | `lab/cache.py` | disk cache, so re-running a window is free |
 | `lab/runtime.py` | drives an ADK session and records every tool call |
 | `ui/app.py` | timeline, flagged moments, and both variant tabs |
 | `preflight.py` | ten environment checks, none of which spends a token |
+
+### Metrics the labels cannot support
+
+The console publishes 109 Objective Performance Indicators. Three of them can
+be computed from these labels: total duration, and how long each instrument
+was installed overall and per arm. The other 106 need forces, clutches, pedal
+presses and instrument path length, none of which SurgVU records.
+
+`get_metrics` knows the difference. Ask it for one of the 106 and it returns
+the metric's real definition and says why it cannot be answered, rather than
+returning a number. That is working as intended, and getting your agent to
+report it clearly rather than paper over it is part of the exercise.
 
 | You write | Lab |
 |---|---|

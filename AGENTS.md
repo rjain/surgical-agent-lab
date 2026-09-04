@@ -11,7 +11,7 @@ Three labs, in order:
 
 | Lab | File | Who writes it |
 |---|---|---|
-| 1 — Detection | `lab/data.py`, `lab/metrics.py`, `lab/rules.py` | **Supplied, tested. Do not modify.** |
+| 1 — Detection | `lab/data.py`, `lab/metrics.py`, `lab/rules.py`, `lab/opi.py` | **Supplied, tested. Do not modify.** |
 | 2 — Explanation | `lab/lab2_analyze.py` | The participant |
 | 3 — Application | `lab/lab3_agent.py` | The participant |
 | Variant A | `lab/variants/coach.py` | The participant — an agent you talk to |
