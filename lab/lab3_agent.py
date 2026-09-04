@@ -97,5 +97,5 @@ def build_agent():
     """
     raise NotImplementedError(
         "Lab 3: build an Agent with TOOLS and an instruction that forbids "
-        "unsourced numbers. See solutions/ if you get stuck."
+        "unsourced numbers."
     )

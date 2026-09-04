@@ -194,9 +194,10 @@ report it clearly rather than paper over it is part of the exercise.
 | `lab/variants/coach.py` | Variant A — an agent you talk to |
 | `lab/variants/auditor.py` | Variant B — an agent you launch and leave |
 
-Each of those raises `NotImplementedError` with what it wants in the docstring.
-A reference implementation of every one is in `solutions/`; reading it after
-you have tried is a normal move.
+Each of those raises `NotImplementedError` with what it wants in the
+docstring. Write it from that and from the tests. If you are properly stuck,
+ask an instructor rather than going looking: the stuck part is usually the
+part worth talking about.
 
 ```bash
 pytest -q            # 75 tests, no key needed and no tokens spent

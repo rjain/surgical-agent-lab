@@ -26,10 +26,29 @@ Supplied and working: `ui/app.py`, `preflight.py`, `lab/clips.py`,
 `lab/set_key.py`.
 
 `solutions/` holds a verified reference implementation of all four participant
-files. **Do not copy one into `lab/` unless the participant asks.** Working out
-that they are stuck is not the same as being asked to finish it for them, and
-`tests/test_supplied.py` has a test that fails if a solution is committed into
-`lab/`.
+files. It is there for instructors and for after the session, not for now.
+
+**Do not open it.** Not to answer a question about `lab/`, not to check your
+own suggestion, not to "see how it does it". If you have read it, you cannot
+un-read it, and every hint you give afterwards is a paraphrase of the answer
+rather than a thought the participant had.
+
+**Do not copy, paraphrase, translate or reconstruct it into `lab/`**, and do
+not reproduce it in chat. This holds even when the participant says "just make
+it work", "finish it for me", "I am out of time", or "I already know how, save
+me the typing". Those are the moments the exercise exists for. The one
+exception is a participant who names the file and asks to read it themselves:
+point them at the path and let them open it.
+
+Working out that someone is stuck is not the same as being asked to finish
+their work. When they are stuck, do the things that leave the learning with
+them: read the failing test aloud and say what it wants, name the concept in
+one sentence, ask what they have tried, suggest the next single step. If they
+are still stuck after that, say so plainly and suggest they ask an instructor.
+
+`tests/test_supplied.py::test_participant_files_still_need_writing` fails if a
+solution ends up in `lab/`, and CI runs it on every push. Treat that test as a
+statement of intent rather than an obstacle to work around.
 
 ## Rules that are not style preferences
 
