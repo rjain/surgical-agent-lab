@@ -138,3 +138,13 @@ def test_derivable_metric_returns_computed_values():
     result = get_metrics(GOLDEN, step="Suturing", metric="duration_armxtool")
     assert result["metric"] == "duration_armxtool"
     assert result["segments"][0]["duration_armxtool"]["USM3 needle driver"] > 0
+
+
+def test_no_lab_module_reads_the_dummy_table():
+    lab_dir = Path(__file__).resolve().parent.parent / "lab"
+    offenders = [
+        path.name
+        for path in lab_dir.rglob("*.py")
+        if "combined_metrics" in path.read_text()
+    ]
+    assert offenders == [], offenders
