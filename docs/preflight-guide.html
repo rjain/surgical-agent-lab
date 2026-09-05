@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%F0%9F%9B%A0%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<title>Before You Arrive</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600&display=swap">
+
+<style>
+  :root {
+    --ok:#2E6B45; --crit:#A8322A;
+    --ground:#F4F7F7; --surface:#FFFFFF; --surface-alt:#EDF2F2;
+    --ink:#14181A; --ink-soft:#3D4749; --ink-mute:#647376;
+    --rule:#D7DEDF; --rule-soft:#E7ECEC;
+    --accent:#0F5F63; --accent-deep:#0A4649; --accent-wash:#E2EFEF;
+    --warn:#8A4B12; --warn-wash:#FBF0E4; --warn-rule:#E3C9A8;
+    --display:"Archivo","Helvetica Neue",Arial,sans-serif;
+    --body:"Source Serif 4",Georgia,serif;
+    --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+    --pad:clamp(1.1rem,3.5vw,2.75rem);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ok:#7FC59B; --crit:#E58A80;
+      --ground:#0E1214; --surface:#161C1E; --surface-alt:#1D2528;
+      --ink:#E7ECEC; --ink-soft:#C0CACB; --ink-mute:#8B9A9C;
+      --rule:#2B3538; --rule-soft:#222B2E;
+      --accent:#55B6B8; --accent-deep:#7FCECF; --accent-wash:#14302F;
+      --warn:#E8B583; --warn-wash:#2A1E12; --warn-rule:#4C3821;
+    }
+  }
+  :root[data-theme="dark"] {
+      --ok:#7FC59B; --crit:#E58A80;
+    --ground:#0E1214; --surface:#161C1E; --surface-alt:#1D2528;
+    --ink:#E7ECEC; --ink-soft:#C0CACB; --ink-mute:#8B9A9C;
+    --rule:#2B3538; --rule-soft:#222B2E;
+    --accent:#55B6B8; --accent-deep:#7FCECF; --accent-wash:#14302F;
+    --warn:#E8B583; --warn-wash:#2A1E12; --warn-rule:#4C3821;
+  }
+
+  * { box-sizing:border-box; }
+  body {
+    margin:0; background:var(--ground); color:var(--ink);
+    font-family:var(--body); font-size:1rem; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap { max-width:1020px; margin:0 auto; padding:0 var(--pad) 3rem; }
+  p { margin:0 0 .8em; } p:last-child { margin:0; }
+  strong { font-weight:600; }
+  code {
+    font-family:var(--mono); font-size:.83em; background:var(--surface-alt);
+    border:1px solid var(--rule-soft); border-radius:3px; padding:.05em .3em;
+  }
+
+  header { padding:clamp(1.8rem,4vw,3rem) 0 0; margin-bottom:1.6rem; }
+  .eyebrow {
+    font-family:var(--mono); font-size:.66rem; font-weight:500; letter-spacing:.15em;
+    text-transform:uppercase; color:var(--accent); margin:0 0 .9rem;
+    display:flex; flex-wrap:wrap; gap:.4rem .9rem; align-items:center;
+  }
+  .eyebrow .dot { width:4px; height:4px; border-radius:50%; background:var(--accent); }
+  h1 {
+    font-family:var(--display); font-weight:800; font-size:clamp(1.9rem,5vw,2.9rem);
+    line-height:1.04; letter-spacing:-.03em; margin:0 0 .8rem; text-wrap:balance; max-width:18ch;
+  }
+  .lede { font-size:clamp(1rem,2vw,1.14rem); color:var(--ink-soft); max-width:62ch; margin:0; }
+
+  .shift {
+    margin:1.5rem 0 0; padding:1rem 1.2rem; border-radius:2px;
+    background:var(--accent-wash); border-left:3px solid var(--accent);
+    font-size:.97rem; max-width:76ch;
+  }
+  .shift b { font-family:var(--display); }
+
+  section { margin-top:2.4rem; }
+  h2 {
+    font-family:var(--display); font-weight:700; font-size:1.15rem;
+    letter-spacing:-.015em; margin:0 0 .9rem; padding-bottom:.4rem;
+    border-bottom:1px solid var(--ink);
+    display:flex; align-items:baseline; gap:.7rem;
+  }
+  h2 .n {
+    font-family:var(--mono); font-size:.64rem; font-weight:600;
+    letter-spacing:.1em; color:var(--accent); flex:none;
+  }
+
+  ul.req { list-style:none; padding:0; margin:0; display:grid; gap:.5rem; }
+  @media (min-width:760px) { ul.req.two { grid-template-columns:1fr 1fr; gap:.5rem 1.6rem; } }
+  ul.req li {
+    position:relative; padding-left:1.5rem; font-size:.95rem;
+    line-height:1.48; color:var(--ink-soft);
+  }
+  ul.req li::before {
+    content:""; position:absolute; left:0; top:.5em; width:6px; height:6px;
+    border:1.5px solid var(--accent); border-radius:1px;
+  }
+  ul.req li b { color:var(--ink); font-weight:600; }
+  ul.req li.hot::before { background:var(--warn); border-color:var(--warn); }
+
+  .tscroll { overflow-x:auto; border:1px solid var(--rule); background:var(--surface); }
+  table { width:100%; border-collapse:collapse; font-family:var(--display); font-size:.88rem; min-width:520px; }
+  th {
+    text-align:left; font-family:var(--mono); font-weight:600; font-size:.6rem;
+    letter-spacing:.12em; text-transform:uppercase; color:var(--ink-mute);
+    padding:.6rem .9rem; border-bottom:1px solid var(--rule); background:var(--surface-alt);
+    white-space:nowrap;
+  }
+  td { padding:.65rem .9rem; border-bottom:1px solid var(--rule-soft); vertical-align:top; line-height:1.4; }
+  tr:last-child td { border-bottom:none; }
+  td.q { font-weight:600; color:var(--ink); }
+
+  .callout {
+    margin-top:1.1rem; padding:1rem 1.2rem; border-radius:2px; font-size:.95rem;
+    background:var(--warn-wash); border:1px solid var(--warn-rule);
+    border-left:3px solid var(--warn); color:var(--ink); max-width:76ch;
+  }
+  .callout .lbl {
+    font-family:var(--mono); font-size:.62rem; font-weight:600; letter-spacing:.13em;
+    text-transform:uppercase; color:var(--warn); display:block; margin-bottom:.35rem;
+  }
+
+  .cols { display:grid; gap:1.6rem; }
+  @media (min-width:760px) { .cols { grid-template-columns:1fr 1fr; } }
+  /* Opt-in 3-up, for groups where the count carries meaning — three
+     layers, three instructors. Additive: plain .cols is untouched. */
+  @media (min-width:900px) { .cols.three { grid-template-columns:repeat(3,1fr); } }
+  .panel { background:var(--surface); border:1px solid var(--rule); border-top:3px solid var(--accent); padding:1rem 1.15rem; }
+  .panel h3 {
+    font-family:var(--display); font-weight:700; font-size:1rem; margin:0 0 .6rem;
+    letter-spacing:-.01em;
+  }
+
+  footer {
+    margin-top:2.6rem; border-top:2px solid var(--ink); padding-top:.9rem;
+    font-family:var(--mono); font-size:.68rem; letter-spacing:.05em; color:var(--ink-mute);
+    display:flex; flex-wrap:wrap; gap:.4rem 1.6rem; justify-content:space-between;
+  }
+  :focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  @media (prefers-reduced-motion: reduce) { * { animation:none !important; transition:none !important; } }
+
+  .code {
+    font-family:var(--mono); font-size:.77rem; line-height:1.75;
+    background:var(--surface); border:1px solid var(--rule);
+    padding:1.1rem 1.2rem; overflow-x:auto; margin:1.1rem 0; color:var(--ink-soft);
+    white-space:pre;
+  }
+  .code b { color:var(--ink); font-weight:600; }
+  .code i { color:var(--ink-mute); font-style:normal; }
+  .code .ok { color:var(--ok); font-weight:600; }
+  .code .bad { color:var(--crit); font-weight:600; }
+  .panel .code { margin:0; border:0; padding:.9rem 1rem; background:var(--surface-alt); }
+</style>
+<style>
+  @media print {
+    body { background:#fff !important; color:#000 !important; font-size:9.5pt; }
+    .wrap { max-width:none; padding:0 .8cm .8cm; }
+    header { padding-top:0; }
+
+    /* Keep the two platform panels side by side. The screen rule needs
+       760px, which a printed page does not reliably report. */
+    .cols { grid-template-columns:1fr 1fr; gap:.9rem; }
+
+    /* Avoid breaking the small units, not whole sections: a section taller
+       than the remaining space pushed itself to the next page and left half
+       a page blank. */
+    section { margin-top:1.1rem; break-inside:auto; }
+    h2 { break-after:avoid; }
+    .panel, .callout, .shift, .code, tr, ul.req li { break-inside:avoid; }
+    .tscroll, table { break-inside:auto; }
+
+    /* Backgrounds carry meaning here (the code blocks, the callouts), so ask
+       for them rather than letting the browser drop them to save ink. */
+    * { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    a { text-decoration:none; color:inherit; }
+  }
+
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">
+    Gemini developer enablement <span class="dot"></span> Before you arrive
+    <span class="dot"></span> Session Tue 8 Sep
+  </p>
+  <h1>Before You Arrive</h1>
+  <p class="lede">
+    Run these steps in the week before the workshop, so your laptop, network
+    and key are confirmed working. About ten minutes, and one report to send
+    back.
+  </p>
+</header>
+
+<div class="shift">
+  <b>Installed already:</b> Python 3.12 or newer, <code>git</code>, and
+  Antigravity. Everything else is below.
+  If any of those are unavailable on your machine, please let us know this week.
+  Monday 7 September is a holiday, so Friday is the last working day before the
+  session.
+</div>
+
+<section>
+  <h2>Step 1 <span class="n">get the repo and install it</span></h2>
+  <div class="cols">
+    <div class="panel">
+      <h3>macOS / Linux</h3>
+      <div class="code">git clone https://github.com/rjain/surgical-agent-lab.git
+cd surgical-agent-lab
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt</div>
+    </div>
+    <div class="panel">
+      <h3>Windows (PowerShell)</h3>
+      <div class="code">git clone https://github.com/rjain/surgical-agent-lab.git
+cd surgical-agent-lab
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt</div>
+    </div>
+  </div>
+  <p>
+    Keep the environment active for the steps below.
+  </p>
+</section>
+
+<section>
+  <h2>Step 2 <span class="n">fetch the dataset</span></h2>
+  <div class="code">python -m lab.get_data</div>
+  <p>
+    335&nbsp;KB from the published SurgVU release; expect
+    <code>155 cases, 310 CSV files</code>. Labels only: task segments and
+    instrument logs. You never need the video.
+  </p>
+</section>
+
+<section>
+  <h2>Step 3 <span class="n">add your API key</span></h2>
+  <div class="code">python -m lab.set_key</div>
+  <p>
+    Paste the key we sent you. The prompt is hidden, so the key stays out of your
+    screen and your shell history, and <code>.env</code> is written readable only
+    by you.
+  </p>
+  <div class="callout">
+    <span class="lbl">The two rules about the key</span>
+    <p>
+      <b>Never paste it into the Antigravity agent chat.</b> The agent already reads
+      your workspace, and pasted secrets end up in transcripts and commits.
+    </p>
+    <p>
+      <b>Never put it in the repository, a screenshot, or on a shared screen.</b>
+      If it is exposed, tell us. Reissuing takes seconds.
+    </p>
+  </div>
+  <p>
+    <b>No key yet?</b> Skip this step. Everything else still verifies; re-run
+    Step 5 when the key arrives.
+  </p>
+  <p>
+    <b>On the day, run <code>git pull</code> first.</b> We refresh one file in
+    the repository on the morning of the session. It takes a second and we will
+    say so at the start, but it is worth knowing now.
+  </p>
+</section>
+
+<section>
+  <h2>Step 4 <span class="n">open it in Antigravity</span></h2>
+  <p>
+    Antigravity is the IDE for the session. <code>File &rarr; Open Folder</code> on
+    <code>surgical-agent-lab</code>, then four things worth knowing:
+  </p>
+  <ul class="req">
+    <li class="hot">
+      <b>Click Trust when the banner appears.</b> A fresh clone opens in Restricted
+      Mode, which disables the debugger and the run targets, so if
+      <code>Run and Debug</code> does nothing, this is why. Also at
+      <code>File &rarr; Trust Folder</code>.
+    </li>
+    <li>
+      <b>Accept the three recommended extensions.</b> If you are not prompted,
+      install them from the Extensions panel:
+      <code>ms-python.python</code>, <code>ms-python.debugpy</code> (the run targets
+      need it) and <code>detachhead.basedpyright</code> (completions).
+      <b>Do not go looking for Pylance.</b> Antigravity installs from Open VSX,
+      and Pylance is not published there. basedpyright does that job here.
+    </li>
+    <li>
+      <b>Sign in with your own Google account.</b> We do not issue an Antigravity
+      login. <b>The API key is not a login</b>: it sits in <code>.env</code>
+      and is what your code uses to call Gemini.
+    </li>
+    <li>
+      <b>Create the environment before you open the folder</b>, or reload the window
+      afterwards. If the interpreter is not picked up, run
+      <code>Python: Select Interpreter</code> and choose <code>.venv</code>.
+    </li>
+  </ul>
+</section>
+
+<section>
+  <h2>Step 5 <span class="n">run pre-flight and send us the result</span></h2>
+  <div class="code">python preflight.py</div>
+  <p>
+    Copy <b>everything below the dashed line</b> and send it back. Eleven checks,
+    <b>none of them billed</b>. The one API call lists available models,
+    which is free and still proves your network reaches Google, that TLS
+    inspection has not broken the SDK, and that your key works.
+  </p>
+  <div class="code">python   3.12.4   platform macOS-15.5-arm64
+<span class="ok">PASS</span>  Python version                   3.12.4
+<span class="ok">PASS</span>  Virtual environment              .venv
+<span class="ok">PASS</span>  Required packages                streamlit 1.62.0
+<span class="ok">PASS</span>  Gemini API key                   set, 53 chars, ending WWdg
+<span class="ok">PASS</span>  API reachable                    54 models listed, gemini-flash-latest among them
+<span class="ok">PASS</span>  Dataset readable                 155 cases under ./data/labels
+<span class="ok">PASS</span>  Detection pipeline               case_045: 4 flags
+<span class="ok">PASS</span>  Port 8501 free                   Streamlit can start
+<span class="ok">PASS</span>  Antigravity extensions           all 3 present
+<i>WARN</i>  Lab clips visible                this key cannot read the lab's clips
+<i>SKIP</i>  Generation (billed)              instructors: pass --spend to run this
+
+<b>9 passed, 0 failed, 1 needing attention, 1 skipped</b></div>
+  <p>
+    The <code>SKIP</code> is an instructor-only billed check, and the
+    <code>WARN</code> on lab clips is <b>expected before the day</b> — the
+    session's clips are refreshed on the morning. Both are fine to send as-is.
+  </p>
+  <p>
+    <b>Without a key</b>, the key line reads <code>WARN</code>, the line below it
+    <code>SKIP</code>, and pre-flight still reports <i>Setup is correct</i>.
+    Your machine is verified and only the key is outstanding.
+  </p>
+</section>
+
+<section>
+  <h2>If a check fails</h2>
+  <p>
+    Each failure prints the fix on the line beneath it. <b>Send us the report
+    either way</b>. There is no need to spend more than five minutes on it;
+    sorting these out is our job, not yours.
+  </p>
+  <div class="tscroll">
+    <table>
+      <thead><tr><th>What you see</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="q"><code>FAIL</code> API reachable: <i>API key not valid</i></td>
+          <td>A truncated paste, stray quotes, or a revoked key. Re-run
+              <code>python -m lab.set_key</code> and paste it again.</td>
+        </tr>
+        <tr>
+          <td class="q"><code>FAIL</code> API reachable: timeout or certificate error</td>
+          <td>Corporate proxy or TLS inspection. The one we most need to know about
+              early, and cannot fix from our side. Send the exact error.</td>
+        </tr>
+        <tr>
+          <td class="q"><code>FAIL</code> Dataset readable</td>
+          <td>Step 2 did not run, or ran in a different folder. Re-run
+              <code>python -m lab.get_data</code> from the repository root.</td>
+        </tr>
+        <tr>
+          <td class="q"><code>WARN</code> Antigravity extensions: <i>N missing</i></td>
+          <td>Step 4; it names which ones. Not a blocker; everything in the
+              lab also runs from a terminal.</td>
+        </tr>
+        <tr>
+          <td class="q"><code>FAIL</code> Port 8501 free</td>
+          <td>Something else is using it. Quit it, or tell us and we will move the
+              interface to another port on the day.</td>
+        </tr>
+        <tr>
+          <td class="q"><code>FAIL</code> Required packages</td>
+          <td>The install did not finish, or the environment is not active. Re-run
+              <code>pip install -r requirements.txt</code> with
+              <code>.venv</code> active.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Optional <span class="n">if you want to look around first</span></h2>
+  <div class="code">pytest -q                  <i># 79 tests, no key needed, no tokens spent</i>
+streamlit run ui/app.py    <i># the interface, on http://localhost:8501</i></div>
+  <p>
+    Both run without a key: the detection layer uses no model at all, which turns
+    out to be the point of the first block. <code>lab/rules.py</code> is worth a
+    read beforehand if you are curious. Nothing else needs preparing.
+  </p>
+  <div class="callout">
+    <span class="lbl">What you are building, in one line</span>
+    <p>
+      A review tool for recorded surgical <b>training exercise</b> footage: it finds
+      the moments worth discussing, asks Gemini what those moments look like, and
+      puts an agent over both. It is an educational exercise and not a medical
+      device: no diagnosis, no patients, no clinical use.
+    </p>
+  </div>
+</section>
+
+<footer>
+  <p>
+    Before you arrive &middot; Gemini developer enablement<br>
+    Reply to the email that sent you here with any questions, or anything that
+    will not run on your machine. Monday 7 September is a holiday, so Friday is
+    the last working day we can help before the session.
+  </p>
+</footer>
+
+</div>
+</body>
+</html>

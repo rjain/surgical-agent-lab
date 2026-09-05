@@ -32,10 +32,14 @@ been repackaged in between. It is labels only — task segments and instrument
 mounts as CSV. The video clips the lab needs are handled by `lab/clips.py`.
 
 `preflight.py` prints a report to send back to the instructors. Run it when you
-get your key, not on the day. The full pre-session walkthrough — what to do,
-by when, and what a good pre-flight result looks like — is
-[docs/participant-guide.html](docs/participant-guide.html); open it in a
-browser.
+get your key, not on the day. Two documents walk you through it — open either
+in a browser:
+
+- [docs/preflight-guide.html](docs/preflight-guide.html) — the setup steps and
+  what a good pre-flight result looks like. **Start here, especially if you
+  are setting up on the morning of the session.**
+- [docs/participant-guide.html](docs/participant-guide.html) — the full
+  pre-session walkthrough: what to do, by when, and what happens on the day.
 
 > **Nothing in the pre-flight spends a token.** The one check that touches the
 > API lists the available models, which is free — enough to prove your network
