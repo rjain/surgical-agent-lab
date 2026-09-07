@@ -38,8 +38,9 @@ in a browser:
 - [docs/preflight-guide.html](docs/preflight-guide.html) — the setup steps and
   what a good pre-flight result looks like. **Start here, especially if you
   are setting up on the morning of the session.**
-- [docs/participant-guide.html](docs/participant-guide.html) — the full
-  pre-session walkthrough: what to do, by when, and what happens on the day.
+- [docs/participant-guide.html](docs/participant-guide.html) — the lab itself,
+  block by block: what happens in each of the four building blocks, what you
+  write, and the suggested time for each.
 
 > **Nothing in the pre-flight spends a token.** The one check that touches the
 > API lists the available models, which is free — enough to prove your network

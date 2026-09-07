@@ -4,431 +4,490 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%E2%9C%85%3C/text%3E%3C/svg%3E">
-<title>Before the Lab</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%F0%9F%A9%BA%3C/text%3E%3C/svg%3E">
+<title>The Lab, Block by Block</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600&display=swap">
 
 <style>
   :root {
+    --ok:#2E6B45; --crit:#A8322A;
     --ground:#F4F7F7; --surface:#FFFFFF; --surface-alt:#EDF2F2;
     --ink:#14181A; --ink-soft:#3D4749; --ink-mute:#647376;
     --rule:#D7DEDF; --rule-soft:#E7ECEC;
     --accent:#0F5F63; --accent-deep:#0A4649; --accent-wash:#E2EFEF;
-    --crit:#A8322A; --crit-wash:#F7E7E5;
-    --ok:#2E6B45; --ok-wash:#E4F0E8;
+    --warn:#8A4B12; --warn-wash:#FBF0E4; --warn-rule:#E3C9A8;
     --display:"Archivo","Helvetica Neue",Arial,sans-serif;
-    --body:"Source Serif 4",Georgia,"Times New Roman",serif;
-    --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
-    --measure:64ch; --pad:clamp(1.25rem,4vw,3.5rem);
+    --body:"Source Serif 4",Georgia,serif;
+    --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+    --pad:clamp(1.1rem,3.5vw,2.75rem);
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
+      --ok:#7FC59B; --crit:#E58A80;
       --ground:#0E1214; --surface:#161C1E; --surface-alt:#1D2528;
       --ink:#E7ECEC; --ink-soft:#C0CACB; --ink-mute:#8B9A9C;
       --rule:#2B3538; --rule-soft:#222B2E;
       --accent:#55B6B8; --accent-deep:#7FCECF; --accent-wash:#14302F;
-      --crit:#E58A80; --crit-wash:#33201E;
-      --ok:#7FC59B; --ok-wash:#182C21;
+      --warn:#E8B583; --warn-wash:#2A1E12; --warn-rule:#4C3821;
     }
   }
   :root[data-theme="dark"] {
+      --ok:#7FC59B; --crit:#E58A80;
     --ground:#0E1214; --surface:#161C1E; --surface-alt:#1D2528;
     --ink:#E7ECEC; --ink-soft:#C0CACB; --ink-mute:#8B9A9C;
     --rule:#2B3538; --rule-soft:#222B2E;
     --accent:#55B6B8; --accent-deep:#7FCECF; --accent-wash:#14302F;
-    --crit:#E58A80; --crit-wash:#33201E;
-    --ok:#7FC59B; --ok-wash:#182C21;
+    --warn:#E8B583; --warn-wash:#2A1E12; --warn-rule:#4C3821;
   }
 
   * { box-sizing:border-box; }
   body {
     margin:0; background:var(--ground); color:var(--ink);
-    font-family:var(--body); font-size:1.075rem; line-height:1.64;
+    font-family:var(--body); font-size:1rem; line-height:1.5;
     -webkit-font-smoothing:antialiased;
   }
-  .wrap { max-width:820px; margin:0 auto; padding:0 var(--pad) 6rem; }
-  .measure { max-width:var(--measure); }
-  p { margin:0 0 1.1em; } p:last-child { margin-bottom:0; }
+  .wrap { max-width:1020px; margin:0 auto; padding:0 var(--pad) 3rem; }
+  p { margin:0 0 .8em; } p:last-child { margin:0; }
   strong { font-weight:600; }
   code {
-    font-family:var(--mono); font-size:.85em; background:var(--surface-alt);
-    border:1px solid var(--rule-soft); border-radius:3px; padding:.08em .34em;
-    word-break:break-word;
+    font-family:var(--mono); font-size:.83em; background:var(--surface-alt);
+    border:1px solid var(--rule-soft); border-radius:3px; padding:.05em .3em;
   }
 
-  header.mast { padding:clamp(2.5rem,6vw,4.5rem) 0 0; margin-bottom:2.75rem; }
+  header { padding:clamp(1.8rem,4vw,3rem) 0 0; margin-bottom:1.6rem; }
   .eyebrow {
-    font-family:var(--mono); font-size:.7rem; font-weight:500; letter-spacing:.16em;
-    text-transform:uppercase; color:var(--accent); margin:0 0 1.3rem;
+    font-family:var(--mono); font-size:.66rem; font-weight:500; letter-spacing:.15em;
+    text-transform:uppercase; color:var(--accent); margin:0 0 .9rem;
+    display:flex; flex-wrap:wrap; gap:.4rem .9rem; align-items:center;
   }
+  .eyebrow .dot { width:4px; height:4px; border-radius:50%; background:var(--accent); }
   h1 {
-    font-family:var(--display); font-weight:800;
-    font-size:clamp(2.3rem,7vw,3.6rem); line-height:1.0; letter-spacing:-.03em;
-    margin:0 0 1rem; text-wrap:balance; max-width:14ch;
+    font-family:var(--display); font-weight:800; font-size:clamp(1.9rem,5vw,2.9rem);
+    line-height:1.04; letter-spacing:-.03em; margin:0 0 .8rem; text-wrap:balance; max-width:18ch;
   }
-  .standfirst {
-    font-size:clamp(1.1rem,2.2vw,1.28rem); color:var(--ink-soft);
-    max-width:56ch; margin:0 0 2.2rem;
-  }
-  .glance {
-    display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
-    gap:1px; background:var(--rule); border:1px solid var(--rule);
-  }
-  .glance div { background:var(--surface); padding:.95rem 1.05rem; }
-  .glance dt {
-    font-family:var(--mono); font-size:.63rem; letter-spacing:.13em;
-    text-transform:uppercase; color:var(--ink-mute); margin-bottom:.35rem;
-  }
-  .glance dd { margin:0; font-family:var(--display); font-weight:600; font-size:.95rem; line-height:1.35; }
+  .lede { font-size:clamp(1rem,2vw,1.14rem); color:var(--ink-soft); max-width:62ch; margin:0; }
 
-  section { margin-bottom:3.5rem; }
-  .sect-head {
-    display:flex; align-items:baseline; gap:1rem; border-bottom:1px solid var(--ink);
-    padding-bottom:.55rem; margin-bottom:1.7rem;
+  .shift {
+    margin:1.5rem 0 0; padding:1rem 1.2rem; border-radius:2px;
+    background:var(--accent-wash); border-left:3px solid var(--accent);
+    font-size:.97rem; max-width:76ch;
   }
-  .sect-head .num {
-    font-family:var(--mono); font-size:.72rem; font-weight:600; letter-spacing:.1em;
-    color:var(--accent); flex:none; padding-top:.2rem;
-  }
-  .sect-head h2 {
-    font-family:var(--display); font-weight:700; font-size:clamp(1.3rem,3.2vw,1.7rem);
-    letter-spacing:-.02em; line-height:1.15; margin:0; text-wrap:balance;
-  }
-  h3 {
-    font-family:var(--display); font-weight:600; font-size:1.06rem;
-    letter-spacing:-.01em; line-height:1.3; margin:2.2rem 0 .7rem;
-  }
-  h3:first-child { margin-top:0; }
+  .shift b { font-family:var(--display); }
 
-  .step {
-    background:var(--surface); border:1px solid var(--rule); border-radius:2px;
-    padding:1.25rem 1.35rem; margin-bottom:1rem;
-    display:grid; grid-template-columns:36px 1fr; gap:1.1rem;
+  section { margin-top:2.4rem; }
+  h2 {
+    font-family:var(--display); font-weight:700; font-size:1.15rem;
+    letter-spacing:-.015em; margin:0 0 .9rem; padding-bottom:.4rem;
+    border-bottom:1px solid var(--ink);
+    display:flex; align-items:baseline; gap:.7rem;
   }
-  .step .n {
-    font-family:var(--display); font-weight:800; font-size:1.35rem;
-    color:var(--accent); line-height:1; padding-top:.1rem;
-    font-variant-numeric:tabular-nums;
-  }
-  .step h4 {
-    font-family:var(--display); font-weight:700; font-size:1.03rem;
-    letter-spacing:-.01em; margin:0 0 .5rem; line-height:1.3;
-  }
-  .step p { font-size:1rem; color:var(--ink-soft); }
-  .step .mins {
-    font-family:var(--mono); font-size:.66rem; letter-spacing:.1em;
-    text-transform:uppercase; color:var(--ink-mute); margin-top:.6rem;
+  h2 .n {
+    font-family:var(--mono); font-size:.64rem; font-weight:600;
+    letter-spacing:.1em; color:var(--accent); flex:none;
   }
 
-  pre.code {
-    font-family:var(--mono); font-size:.79rem; line-height:1.7;
-    background:var(--surface); border:1px solid var(--rule);
-    padding:1rem 1.15rem; overflow-x:auto; margin:1rem 0; color:var(--ink-soft);
+  ul.req { list-style:none; padding:0; margin:0; display:grid; gap:.5rem; }
+  @media (min-width:760px) { ul.req.two { grid-template-columns:1fr 1fr; gap:.5rem 1.6rem; } }
+  ul.req li {
+    position:relative; padding-left:1.5rem; font-size:.95rem;
+    line-height:1.48; color:var(--ink-soft);
   }
-  pre.code b { color:var(--accent); font-weight:600; }
-  pre.code i { color:var(--ink-mute); font-style:normal; }
+  ul.req li::before {
+    content:""; position:absolute; left:0; top:.5em; width:6px; height:6px;
+    border:1.5px solid var(--accent); border-radius:1px;
+  }
+  ul.req li b { color:var(--ink); font-weight:600; }
+  ul.req li.hot::before { background:var(--warn); border-color:var(--warn); }
 
-  ul.plain { padding-left:1.15rem; margin:1rem 0; max-width:var(--measure); }
-  ul.plain li { margin-bottom:.5rem; color:var(--ink-soft); }
-  ul.plain li b { color:var(--ink); font-weight:600; }
-
-  ul.check { list-style:none; padding:0; margin:1.2rem 0; display:flex; flex-direction:column; gap:.6rem; }
-  ul.check li {
-    position:relative; padding-left:1.85rem;
-    font-size:1rem; color:var(--ink-soft); line-height:1.5;
+  .tscroll { overflow-x:auto; border:1px solid var(--rule); background:var(--surface); }
+  table { width:100%; border-collapse:collapse; font-family:var(--display); font-size:.88rem; min-width:520px; }
+  th {
+    text-align:left; font-family:var(--mono); font-weight:600; font-size:.6rem;
+    letter-spacing:.12em; text-transform:uppercase; color:var(--ink-mute);
+    padding:.6rem .9rem; border-bottom:1px solid var(--rule); background:var(--surface-alt);
+    white-space:nowrap;
   }
-  ul.check li::before {
-    content:""; position:absolute; left:0; top:.42em; width:12px; height:12px;
-    border:1.5px solid var(--accent); border-radius:2px;
-  }
-  ul.check li b { color:var(--ink); font-weight:600; }
+  td { padding:.65rem .9rem; border-bottom:1px solid var(--rule-soft); vertical-align:top; line-height:1.4; }
+  tr:last-child td { border-bottom:none; }
+  td.q { font-weight:600; color:var(--ink); }
 
   .callout {
-    background:var(--surface-alt); border:1px solid var(--rule);
-    border-radius:2px; padding:1.2rem 1.35rem; margin:1.6rem 0;
+    margin-top:1.1rem; padding:1rem 1.2rem; border-radius:2px; font-size:.95rem;
+    background:var(--warn-wash); border:1px solid var(--warn-rule);
+    border-left:3px solid var(--warn); color:var(--ink); max-width:76ch;
   }
-  .callout.warn { background:var(--crit-wash); border-color:color-mix(in srgb, var(--crit) 30%, transparent); }
-  .callout.good { background:var(--ok-wash); border-color:color-mix(in srgb, var(--ok) 30%, transparent); }
   .callout .lbl {
-    font-family:var(--mono); font-size:.66rem; font-weight:600; letter-spacing:.14em;
-    text-transform:uppercase; color:var(--accent); display:block; margin-bottom:.5rem;
+    font-family:var(--mono); font-size:.62rem; font-weight:600; letter-spacing:.13em;
+    text-transform:uppercase; color:var(--warn); display:block; margin-bottom:.35rem;
   }
-  .callout.warn .lbl { color:var(--crit); }
-  .callout.good .lbl { color:var(--ok); }
-  .callout p { font-size:1rem; max-width:66ch; }
 
-  .tscroll { overflow-x:auto; border:1px solid var(--rule); background:var(--surface); margin:1.4rem 0; }
-  table { width:100%; border-collapse:collapse; font-family:var(--display); font-size:.9rem; min-width:460px; }
-  th {
-    text-align:left; font-family:var(--mono); font-weight:600; font-size:.63rem;
-    letter-spacing:.13em; text-transform:uppercase; color:var(--ink-mute);
-    padding:.75rem 1rem; border-bottom:1px solid var(--rule);
-    background:var(--surface-alt); white-space:nowrap;
+  .cols { display:grid; gap:1.6rem; }
+  @media (min-width:760px) { .cols { grid-template-columns:1fr 1fr; } }
+  /* Opt-in 3-up, for groups where the count carries meaning — three
+     layers, three instructors. Additive: plain .cols is untouched. */
+  @media (min-width:900px) { .cols.three { grid-template-columns:repeat(3,1fr); } }
+  .panel { background:var(--surface); border:1px solid var(--rule); border-top:3px solid var(--accent); padding:1rem 1.15rem; }
+  .panel h3 {
+    font-family:var(--display); font-weight:700; font-size:1rem; margin:0 0 .6rem;
+    letter-spacing:-.01em;
   }
-  td { padding:.78rem 1rem; border-bottom:1px solid var(--rule-soft); vertical-align:top; line-height:1.45; }
-  tr:last-child td { border-bottom:none; }
-  td.m { font-family:var(--mono); font-size:.8rem; color:var(--accent); }
 
   footer {
-    border-top:2px solid var(--ink); padding-top:1.3rem; margin-top:1rem;
-    font-family:var(--mono); font-size:.72rem; letter-spacing:.05em; color:var(--ink-mute);
+    margin-top:2.6rem; border-top:2px solid var(--ink); padding-top:.9rem;
+    font-family:var(--mono); font-size:.68rem; letter-spacing:.05em; color:var(--ink-mute);
+    display:flex; flex-wrap:wrap; gap:.4rem 1.6rem; justify-content:space-between;
   }
   :focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
   @media (prefers-reduced-motion: reduce) { * { animation:none !important; transition:none !important; } }
+
+  .code {
+    font-family:var(--mono); font-size:.77rem; line-height:1.75;
+    background:var(--surface); border:1px solid var(--rule);
+    padding:1.1rem 1.2rem; overflow-x:auto; margin:1.1rem 0; color:var(--ink-soft);
+    white-space:pre;
+  }
+  .code b { color:var(--ink); font-weight:600; }
+  .code i { color:var(--ink-mute); font-style:normal; }
+  .code .ok { color:var(--ok); font-weight:600; }
+  .code .bad { color:var(--crit); font-weight:600; }
+  .panel .code { margin:0; border:0; padding:.9rem 1rem; background:var(--surface-alt); }
 </style>
 <style>
   @media print {
-    body { background:#fff !important; color:#000 !important; }
-    .wrap { max-width:none; padding:0 1cm 1cm; }
-    section { break-inside:avoid-page; margin-bottom:2rem; }
-    .task,.callout,.day,.step { break-inside:avoid; }
-    pre.code { white-space:pre-wrap; word-break:break-word; }
-    thead { display:table-header-group; }
+    body { background:#fff !important; color:#000 !important; font-size:9.5pt; }
+    .wrap { max-width:none; padding:0 .8cm .8cm; }
+    header { padding-top:0; }
+
+    /* Keep the two platform panels side by side. The screen rule needs
+       760px, which a printed page does not reliably report. */
+    .cols { grid-template-columns:1fr 1fr; gap:.9rem; }
+
+    /* Avoid breaking the small units, not whole sections: a section taller
+       than the remaining space pushed itself to the next page and left half
+       a page blank. */
+    section { margin-top:1.1rem; break-inside:auto; }
+    h2 { break-after:avoid; }
+    .panel, .callout, .shift, .code, tr, ul.req li { break-inside:avoid; }
+    .tscroll, table { break-inside:auto; }
+
+    /* Backgrounds carry meaning here (the code blocks, the callouts), so ask
+       for them rather than letting the browser drop them to save ink. */
+    * { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    a { text-decoration:none; color:inherit; }
   }
+
 </style>
 </head>
 <body>
-
-
 <div class="wrap">
 
-  <header class="mast">
-    <p class="eyebrow">Gemini developer lab &middot; Tuesday 8 September 2026</p>
-    <h1>Before the Lab</h1>
-    <p class="standfirst">
-      Everything you need to do beforehand, in four steps that take about half an hour in total.
-      Please finish them by <strong>Friday 4 September</strong> &mdash; Monday is a holiday, so there
-      is no chance to fix anything over the weekend.
-    </p>
-    <dl class="glance">
-      <div><dt>Session</dt><dd>Tue 8 Sep</dd></div>
-      <div><dt>Hands-on lab</dt><dd>2.5 hours</dd></div>
-      <div><dt>Format</dt><dd>Room + Google Meet</dd></div>
-      <div><dt>Your prep</dt><dd>~30 minutes</dd></div>
-      <div><dt>Deadline</dt><dd>Fri 4 Sep, EOD</dd></div>
-    </dl>
-  </header>
+<header>
+  <p class="eyebrow">
+    Gemini developer enablement <span class="dot"></span> During the session
+    <span class="dot"></span> Tue 8 Sep <span class="dot"></span> 150 minutes
+  </p>
+  <h1>The Lab, Block by Block</h1>
+  <p class="lede">
+    You build one system in three parts: a detector that uses no model, an
+    explanation layer that does, and an agent over both. Then your group picks
+    one of two things to build on top. This is what happens in each block and
+    what you write.
+  </p>
+</header>
 
-  <section>
-    <div class="sect-head"><span class="num">01</span><h2>What you will build</h2></div>
-    <div class="measure">
-      <p>
-        A system that audits recorded robotic surgery training sessions. It detects workflow deviations
-        from the dataset&rsquo;s published annotations, explains them using Gemini&rsquo;s multimodal
-        reasoning over the relevant video clip, and exposes both through an agent built with the Agent
-        Development Kit.
-      </p>
-      <p>
-        You write the interesting parts. The data pipeline, the rules engine and the interface are
-        supplied working, so you spend the session on Gemini and ADK rather than on plumbing.
-      </p>
-      <p>
-        <strong>No prior Google Cloud, Gemini or machine-learning experience is assumed.</strong> Comfortable
-        intermediate Python is enough: functions, classes, virtual environments, and reading unfamiliar
-        code. No surgical knowledge is needed either &mdash; the briefing covers what matters.
-      </p>
-    </div>
-  </section>
-
-  <section>
-    <div class="sect-head"><span class="num">02</span><h2>The four steps</h2></div>
-
-    <div class="step">
-      <div class="n">1</div>
-      <div>
-        <h4>Check you can install things &mdash; do this first</h4>
-        <p>
-          You need <strong>Python 3.12 or later</strong>, the ability to <code>pip install</code>, and
-          <strong>Antigravity</strong> installed and able to sign in. Antigravity is the environment the
-          lab is built in.
-        </p>
-        <p>
-          <strong>If your laptop is managed and either is blocked, raise an IT ticket today.</strong>
-          It is the most common reason someone loses the first half hour, and the one thing that cannot
-          be fixed on the morning.
-        </p>
-        <p class="mins">~5 minutes, or one ticket</p>
-      </div>
-    </div>
-
-    <div class="step">
-      <div class="n">2</div>
-      <div>
-        <h4>Paste this block and answer one prompt</h4>
-        <p>
-          Everything else is one paste. It will stop once to ask for your key &mdash; paste it and press
-          Enter. Your typing stays hidden and the key never touches your shell history.
-        </p>
-
-        <p class="mins" style="margin-top:1.2rem">macOS &amp; Linux</p>
-        <pre class="code">git clone https://github.com/rjain/surgical-agent-lab.git
-cd surgical-agent-lab
-python3 -m venv .venv &amp;&amp; source .venv/bin/activate
-pip install -r requirements.txt
-python -m lab.set_key
-python -m lab.get_data
-python preflight.py</pre>
-
-        <p class="mins">Windows PowerShell</p>
-        <pre class="code">git clone https://github.com/rjain/surgical-agent-lab.git
-cd surgical-agent-lab
-python -m venv .venv; .\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-python -m lab.set_key
-python -m lab.get_data
-python preflight.py</pre>
-
-        <p class="mins">~10 minutes, mostly the dataset download</p>
-      </div>
-    </div>
-
-    <div class="step">
-      <div class="n">3</div>
-      <div>
-        <h4>Reply with the result</h4>
-        <p>
-          The last command runs eleven checks &mdash; including that Antigravity and its extensions are
-          installed &mdash; and each failure comes with its fix printed next to it. It ends with a block
-          headed <code>COPY EVERYTHING BELOW THIS LINE INTO YOUR REPLY</code>: do exactly that, into a
-          reply to your setup email, whether it passed or not.
-        </p>
-        <p>
-          One thing the script cannot see is whether you can <strong>sign in</strong> to Antigravity, so
-          open it and check before you reply.
-        </p>
-        <p class="mins">~2 minutes</p>
-      </div>
-    </div>
-
-    <div class="callout good">
-      <span class="lbl">If you already use Gemini</span>
-      <p>
-        The variable is <code>LAB_GEMINI_API_KEY</code>, not the usual <code>GEMINI_API_KEY</code> or
-        <code>GOOGLE_API_KEY</code>. That is deliberate: <strong>any Gemini key you already have keeps
-        working and is not touched</strong>, and the lab key will not leak into your own projects. The
-        pre-flight will tell you if it spots one.
-      </p>
-    </div>
-
-    <div class="callout good">
-      <span class="lbl">What a good result looks like</span>
-      <pre class="code" style="margin:0">[  <b>ok</b>  ] Python version — 3.12.4
-[  <b>ok</b>  ] Virtual environment — .venv
-[  <b>ok</b>  ] Required packages — streamlit 1.62.0
-[  <b>ok</b>  ] Gemini API key — set, 53 chars, ending 9f2K
-[  <b>ok</b>  ] API reachable — 54 models listed, gemini-flash-latest among them
-[  <b>ok</b>  ] Dataset readable — 155 cases under data/labels
-[  <b>ok</b>  ] Detection pipeline — case_045: 4 flags
-[  <b>ok</b>  ] Port 8501 free — Streamlit can start
-[  <b>ok</b>  ] Antigravity extensions — all 3 present
-[ <i>note</i> ] Lab clips visible — this key cannot read the lab's clips
-[ <i>skip</i> ] Generation (billed) — instructors: pass --spend to run this
-
-<i>--------------------------------------------------------------------</i>
-<b>COPY EVERYTHING BELOW THIS LINE INTO YOUR REPLY</b>
-<i>--------------------------------------------------------------------</i>
-<i>… the same checks again, in a paste-friendly form …</i>
-
-9 passed, 0 failed, 1 needing attention, 1 skipped
-Setup is correct. See the note above for what still needs
-doing before the session.</pre>
-      <p style="margin-top:.9rem">
-        The <code>note</code> on lab clips is <strong>expected before the day</strong> &mdash; your check
-        key cannot see the session's clips yet. Anything marked <code>FAIL</code> is yours to fix, with
-        the fix printed under it.
-      </p>
-    </div>
-  </section>
-
-  <section>
-    <div class="sect-head"><span class="num">03</span><h2>Two logins that are not the same thing</h2></div>
-
-    <div class="measure">
-      <p>
-        This trips people up, so it is worth thirty seconds now rather than ten minutes on the day.
-      </p>
-    </div>
-
-    <div class="tscroll">
-      <table>
-        <thead><tr><th>&nbsp;</th><th>Antigravity</th><th>The API key</th></tr></thead>
-        <tbody>
-          <tr><td><b>What it is</b></td><td>Your own Google sign-in, as normal</td><td class="m">A string in a file</td></tr>
-          <tr><td><b>You use it to</b></td><td>Open and work in the IDE</td><td class="m">Let your code call Gemini</td></tr>
-          <tr><td><b>Where it goes</b></td><td>The usual sign-in screen</td><td class="m">Your local <code>.env</code>, as <code>LAB_GEMINI_API_KEY</code>, nowhere else</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="callout warn">
-      <span class="lbl">The key is not a login</span>
-      <p>
-        You never sign in anywhere with it, and you will not be given a Google account for this session.
-        Sign into Antigravity with your own account exactly as you normally would. The key only ever goes
-        in <code>.env</code>.
-      </p>
-    </div>
-
-    <h3>Two things to avoid</h3>
-    <ul class="check">
-      <li><b>Do not commit the key.</b> <code>.env</code> is already in <code>.gitignore</code> &mdash; just do not move the key out of it.</li>
-      <li><b>Do not paste the key into an agent chat.</b> Antigravity&rsquo;s agent can already read your workspace; pasting secrets into a conversation puts them in transcripts and, eventually, commits.</li>
-    </ul>
-  </section>
-
-  <section>
-    <div class="sect-head"><span class="num">04</span><h2>On the day</h2></div>
-    <ul class="plain">
-      <li><b>Your own key arrives by email shortly before we start.</b> Paste it over the check key in <code>.env</code> &mdash; same line, same file, ten seconds. The check key stops working at 13:00, so do this first. If your email has not arrived, say so in the Meet chat and one will be sent to you directly.</li>
-      <li><b>Bring the laptop you ran the pre-flight on.</b> A different machine means starting step 2 again while everyone else is building.</li>
-      <li><b>Join the Meet even if you are in the room</b> &mdash; the chat is where questions and fixes get posted, and a shared troubleshooting document is linked there.</li>
-      <li><b>Work in groups of about five.</b> Each group picks one of two applications to build; you will be introduced to both and choose over the break.</li>
-      <li><b>You keep your code.</b> It lives on your laptop throughout, so nothing disappears when the session ends.</li>
-    </ul>
-  </section>
-
-  <section>
-    <div class="sect-head"><span class="num">05</span><h2>Access, data, and what happens afterwards</h2></div>
-    <ul class="plain">
-      <li><b>Your key works until Tuesday 15 September</b>, a week after the session, so you can go back and finish or extend what you built.</li>
-      <li><b>After that the environment is deleted</b> &mdash; keys revoked on 15 September, everything else removed on 22 September. Your local code is unaffected.</li>
-      <li><b>Want to take it further?</b> If your own team has a Google Cloud project you can deploy to, your key works from there too during that week. Use a secret manager rather than putting it in a container image.</li>
-    </ul>
-
-    <div class="callout warn">
-      <span class="lbl">Please read: what not to bring</span>
-      <p>
-        The lab uses the public <strong>SurgVU</strong> research dataset only. Do not introduce any patient
-        data, clinical footage, production data or internal intellectual property into the exercise or the
-        shared environment. Nothing built during the session is a medical device or intended for clinical
-        use &mdash; it is a training exercise on recorded practice footage.
-      </p>
-    </div>
-  </section>
-
-  <section>
-    <div class="sect-head"><span class="num">06</span><h2>If something does not work</h2></div>
-    <div class="measure">
-      <p>
-        Reply to your credentials email with the <strong>entire output</strong> of <code>preflight.py</code>
-        &mdash; it is written to be pasted straight in, and it usually tells us exactly what is wrong.
-        Ask early rather than close to the deadline: a blocked <code>pip install</code> or a locked-down
-        laptop can take a day or two to resolve on your side, and there is no time on the morning.
-      </p>
-    </div>
-    <ul class="plain">
-      <li><b>Contact:</b> reply to the setup email that brought you here &mdash; it comes from the instructors.</li>
-      <li><b>Deadline for the pre-flight reply:</b> Friday 4 September, close of business</li>
-    </ul>
-  </section>
-
-  <footer>
-    Gemini developer lab &middot; Altimetrik for Intuitive Surgical &middot; Tue 8 Sep 2026
-  </footer>
-
+<div class="shift">
+  <b>The timings below are a suggested allocation, not a schedule.</b> They
+  are what the material is sized for; spend longer where it is interesting and
+  we will tell you when to move on. The four building blocks fit in the first
+  100 minutes, leaving the last 30 for demos and closeout.
 </div>
 
+<div class="shift">
+  <b>Start here.</b> <code>git pull</code>, then
+  <code>streamlit run ui/app.py</code>. If you set up last week and have not
+  pulled since, you need to: we refresh the clip manifest on the morning of the
+  session. If anything below fails, say so early rather than working around it.
+</div>
+
+<section>
+  <h2>Lab 1 <span class="n">about 15 min &middot; nothing to write</span></h2>
+  <p>
+    Run the interface and read the <b>Session</b> tab. Pick a session marked
+    <code>&middot; prepared</code>; <b><code>case_125</code> is the one to start
+    on.</b> You are looking at task steps, one lane per robot arm, and a mark
+    wherever a rule fired.
+  </p>
+  <p>
+    Open a flagged moment. Each gives you two halves: <b>what this rule looks
+    for</b>, and <b>what it found here</b>. Neither works alone, and the first
+    is what makes the second worth reading. Below them are the instruments in
+    play during the window. Then open <code>lab/rules.py</code> and find the
+    rule that produced it.
+  </p>
+  <p>
+    Start with the <b>Suturing overrun</b>. It took 45.4 minutes against a
+    corpus median of 8.0, and the same session does Suturing three other times
+    in 1.4, 7.3 and 5.9 minutes. You do not need the corpus to see which one is
+    odd, which is the clearest version of what these rules are for.
+  </p>
+  <div class="callout">
+    <span class="lbl">The point of this block, and of the whole day</span>
+    <p>
+      Every flagged moment you are looking at was found by about two hundred
+      lines of ordinary Python, in microseconds, with <b>no model and no
+      computer vision</b>. Four rules over task and instrument logs: swap
+      churn, step overrun against a corpus median, oscillation back to a step,
+      and an unidentified instrument.
+    </p>
+    <p>
+      Nothing above this line needs a model, so nothing above this line gets
+      one. Being able to make that argument, and to show where the line sits,
+      is what you should leave with.
+    </p>
+  </div>
+  <p>
+    <b>If you finish early, one of these rules is weaker than it looks.</b>
+    The thresholds at the top of <code>lab/rules.py</code> are tunable, and
+    <code>python -m lab.evaluate_rules</code> reports what fires across all 155
+    sessions. A rule that never fires is dead weight; a rule that fires on the
+    majority case teaches the room that the system cries wolf. One of the four
+    is in the second category. Find it, and decide what you would do about it.
+  </p>
+</section>
+
+<section>
+  <h2>Lab 2 <span class="n">about 30 min &middot; the dense block</span></h2>
+  <p>
+    A flag names a statistic. "Tool-swap churn at 137 seconds" is useless to
+    the person who has to act on it. Your job is to turn one flagged window
+    into a description they can act on, and then to refuse the descriptions you
+    cannot defend.
+  </p>
+  <p><b>You write two functions in <code>lab/lab2_analyze.py</code>:</b></p>
+  <div class="code">analyze_clip(case_id, part, t_start, t_end) -> TechniqueNotes
+validate(notes, t_start, t_end)                -> None, or raises GuardrailViolation</div>
+  <p>
+    The schemas are given. <code>TechniqueNotes</code> and
+    <code>Observation</code> are already defined, and getting the clip to the
+    model is done for you: call <code>lab.clips.resolve_clip()</code>.
+  </p>
+  <ul class="req">
+    <li>
+      <b>Window it. Do not send the whole segment.</b> A flagged segment is a
+      whole task step, median eleven minutes. Every flag carries a
+      <code>watch_window</code>: forty seconds around the instant that explains
+      it. Roughly 10,000 tokens against 170,000, and the difference is what
+      keeps twenty-five people inside one rate limit.
+    </li>
+    <li>
+      <b>Give the model the flag.</b> Do not ask the open question "what is
+      wrong here". Tell it what the rules found and ask what is visible around
+      that moment. The difference in output quality is not close.
+    </li>
+    <li>
+      <b>Say what you are doing, so the interface can show it.</b> Pressing
+      <b>Explain this moment</b> opens a panel that lists each step as it
+      happens. The supplied parts already report themselves: finding the clip,
+      checking the pre-upload is still live, hitting the cache. The middle is
+      yours, and goes quiet without a line from you.
+      <code>from lab import trace</code>, then
+      <code>trace.step("sending 40s to gemini-flash-latest")</code>. Worth it
+      for your own sake: behind a spinner, a slow run and a broken run look
+      identical.
+    </li>
+    <li class="hot">
+      <b>Then write the guardrail, and prove it fires.</b> The schema fixes the
+      shape of a reply; it does nothing about a timestamp the model was never
+      shown. <code>validate()</code> checks four things: every timestamp inside
+      the window, <code>not_visible</code> non-empty, no clinical vocabulary,
+      at least one observation.
+      <b>Do not wait for the model to misbehave.</b> Hand
+      <code>validate()</code> a <code>TechniqueNotes</code> you built by hand
+      with a timestamp outside the window, and check it raises. Thirty seconds,
+      deterministic, and it is how you would verify any check in real work.
+      <code>tests/test_guardrail.py</code> does exactly this if you want the
+      shape. Then, when the real thing fires, tighten the prompt and run
+      again.
+    </li>
+  </ul>
+  <p>
+    <b>Done when</b> the <b>Explain this moment</b> button on a flagged moment
+    returns notes that survive your own <code>validate()</code>.
+  </p>
+</section>
+
+<section>
+  <h2>The break <span class="n">choose your variant</span></h2>
+  <p>
+    The two variants are pitched just before the break. Decide as a group over
+    it, so the fork starts with building rather than with a discussion.
+  </p>
+</section>
+
+<section>
+  <h2>Lab 3 <span class="n">about 20 min &middot; short, and one exercise inside it</span></h2>
+  <p>
+    Three tools, one agent. The tools are thin wrappers around things that
+    already work, including your own Lab 2. <b>You write one function</b> in
+    <code>lab/lab3_agent.py</code>:
+  </p>
+  <div class="code">build_agent() -> google.adk.Agent    # holding TOOLS, with an instruction</div>
+  <p>
+    Give it an instruction whose first rule is that it must never state a
+    number it did not get from a tool. That is checkable: the interface prints
+    the tools an answer actually called, underneath the answer.
+  </p>
+  <div class="callout">
+    <span class="lbl">Do this before you tidy anything</span>
+    <p>
+      One of the three tools ships with a deliberately useless docstring:
+      <code>"""gets metrics"""</code>, with its arguments described as
+      "the id" and "the step". <b>Leave it alone at first.</b> Run the agent on
+      <i>"where did I lose the most time in case_045?"</i> and watch which tool
+      it reaches for. Then write the docstring properly and run it again.
+    </p>
+    <p>
+      Measured over four runs each: the good docstring calls the right tool
+      first every time, in three or four calls. The vague one picks wrong half
+      the time, and on one run made <b>eleven</b> calls to answer the same
+      question. Neither ever failed outright. A bad tool description does not
+      break an agent, it makes it expensive and erratic, which is far harder to
+      catch in review.
+    </p>
+  </div>
+  <div class="callout">
+    <span class="lbl">When the honest answer is "I cannot"</span>
+    <p>
+      The console publishes 109 Objective Performance Indicators, and
+      <code>lab/opi.py</code> carries all of them: the name the console uses,
+      and its definition. Three can be computed from these labels: total
+      duration, and how long each instrument was installed overall and per
+      arm. The other 106 need forces, clutches, pedal presses and instrument
+      path length, none of which SurgVU records.
+    </p>
+    <p>
+      So <code>get_metrics</code> answers a question about
+      <i>console movement %</i> with that metric's real definition and the
+      reason it cannot be computed, rather than with a number. <b>That is the
+      correct answer, not a bug.</b> Getting your agent to report it plainly,
+      instead of substituting something that looks close, is the harder half
+      of the exercise.
+    </p>
+    <p>
+      One trap worth meeting on purpose. Our <code>swaps_per_min</code> counts
+      instruments being exchanged. The console's <code>arm_swap_freq</code> is
+      the rate of arm swaps, meaning the surgeon changing which arm the hand
+      controllers drive. Same words, different event. The vocabulary belongs
+      to the customer, and guessing at it produces confident nonsense.
+    </p>
+  </div>
+</section>
+
+<section>
+  <h2>The fork <span class="n">about 30 min &middot; build one</span></h2>
+  <p>
+    Both are built on the same three tools. Neither is more correct, and that
+    is the point of running both in one room: the demo block puts them side by
+    side.
+  </p>
+  <div class="cols">
+    <div class="panel">
+      <h3>Variant A &middot; Debrief Coach</h3>
+      <p>
+        An agent you talk to. Someone asks about a session and gets an answer
+        tied to a real measurement and a real timestamp, with the tool calls
+        shown underneath. <code>lab/variants/coach.py</code>.
+      </p>
+      <div class="code">build_coach(tracker)
+build_workflow_tracker()</div>
+      <p>
+        <b>Minimum:</b> one agent holding the three tools. Reach this first.
+        <b>Fuller:</b> add a tracker that knows which flagged moments are still
+        unreviewed.
+      </p>
+      <p>
+        <b>The trap:</b> wire the tracker as an <code>AgentTool</code>, not as
+        a <code>sub_agent</code>. Transfer hands the conversation over, so your
+        coach disappears mid-sentence and the trainee ends up talking to an
+        agent with no conversational instruction. Most ADK material shows
+        transfer first.
+      </p>
+    </div>
+    <div class="panel">
+      <h3>Variant B &middot; Session Auditor</h3>
+      <p>
+        An agent you launch and leave. One action reviews a whole session and
+        emits a typed report: ranked findings, evidence, recommendations, and
+        what the review could not establish.
+        <code>lab/variants/auditor.py</code>.
+      </p>
+      <div class="code">build_segment_analyst()
+build_synthesizer()
+build_auditor()</div>
+      <p>
+        <b>Minimum:</b> a plain loop over the flagged windows, then one
+        synthesis call. <b>Fuller:</b> fan out, with a bounded worker count.
+      </p>
+      <p>
+        <b>Worth noticing:</b> here the <i>code</i> decides what to fetch and
+        the model only reasons over what it is handed. Predictable, and the
+        right shape for anything unattended. Also: consider whether the
+        "analyst" needs building at all, or whether Lab 2 already is one.
+      </p>
+    </div>
+  </div>
+  <p>
+    <b>Reach the minimum form first.</b> Both have one, so a group that runs
+    late ships something smaller rather than nothing. Your variant's tab in the
+    interface stays dark until the file is written, then comes alive.
+  </p>
+</section>
+
+<section>
+  <h2>Wrap <span class="n">the last 30 min &middot; demos and closeout</span></h2>
+  <p>
+    One demo of each variant, the stretch briefs, and saving your work. Your
+    checkout is already a git repository and the code runs from your own
+    machine, so <b>nothing you built depends on anything we switch off.</b>
+    Push it to your own remote if you want it somewhere else.
+  </p>
+</section>
+
+<section>
+  <h2>Two things that will save you time</h2>
+  <ul class="req">
+    <li>
+      <b>Re-running a window is free.</b> Clip analyses are cached to disk, so
+      iterating on a prompt does not re-bill the same call. Delete
+      <code>.cache/</code> if you want a genuinely fresh one.
+    </li>
+    <li>
+      <b><code>solutions/</code> holds a worked version of all four files.</b>
+      Reading one is a normal move, not a defeat. Write your own prompt first, because the prompt is where the learning is. To use one:
+      <code>cp solutions/lab2_analyze.py lab/lab2_analyze.py</code>.
+    </li>
+  </ul>
+  <div class="callout">
+    <span class="lbl">The framing, stated once</span>
+    <p>
+      This reviews recorded <b>training exercise</b> footage. Deviations carry
+      a score, never a severity or a risk. It is an educational exercise and
+      not a medical device: no diagnosis, no patients, no clinical use. That is
+      not a disclaimer bolted on afterwards. It is why Lab 2 has a
+      guardrail and why the reports state what they could not establish.
+    </p>
+  </div>
+</section>
+
+<footer>
+  <p>
+    The lab, block by block &middot; Gemini developer enablement<br>
+    Stuck for more than ten minutes? Ask. That is what three of us are here for.
+  </p>
+</footer>
+
+</div>
 </body>
 </html>
