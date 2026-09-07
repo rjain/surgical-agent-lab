@@ -214,6 +214,21 @@ The variant tabs in the interface stay dark until the matching file is
 written, then come alive. Under every Coach answer is the list of tools it
 actually called — the only way to tell a measured number from an invented one.
 
+### Inspect your agent in `adk web`
+
+Once `lab/lab3_agent.py` is written, the same agent loads in ADK's own dev
+UI:
+
+```bash
+adk web adk_agents
+```
+
+Open the printed URL, pick `session_reviewer`, and ask it something. The
+Events pane shows every tool call it made and what came back — the raw trace
+behind the Coach tab, in Google's inspector. Until Lab 3 is done the page
+refuses to load the agent and says so; if `adk web` loads it, your Lab 3 is
+structurally right.
+
 ## Licence and the dataset
 
 The code is MIT licensed — see [LICENSE](LICENSE). Clone it, change it, and

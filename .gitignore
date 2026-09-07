@@ -9,3 +9,6 @@ __pycache__/
 !.env.example
 data/
 .cache/
+
+# adk web keeps its session store next to the agent
+adk_agents/**/.adk/
