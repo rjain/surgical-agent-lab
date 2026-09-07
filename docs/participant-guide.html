@@ -250,10 +250,18 @@
   <p>
     <b>If you finish early, one of these rules is weaker than it looks.</b>
     The thresholds at the top of <code>lab/rules.py</code> are tunable, and
-    <code>python -m lab.evaluate_rules</code> reports what fires across all 155
-    sessions. A rule that never fires is dead weight; a rule that fires on the
-    majority case teaches the room that the system cries wolf. One of the four
-    is in the second category. Find it, and decide what you would do about it.
+    <code>python -m lab.evaluate_rules --all</code> reports what fires across
+    all 155 sessions. A rule that never fires is dead weight; a rule that fires
+    on the ordinary case teaches the room that the system cries wolf. One of
+    the four is in the second category.
+  </p>
+  <p>
+    Counting flags will not settle it &mdash; two of the rules fire at almost
+    the same rate. Ask instead whether a rule beats chance on the same data:
+    <code>python -m lab.evaluate_rules --distribution</code> puts a null model
+    behind each one. Find the weak rule, and decide what you would do about it.
+    Raising its threshold is the obvious move and the wrong one; be ready to
+    say why.
   </p>
 </section>
 
