@@ -383,6 +383,17 @@ validate(notes, t_start, t_end)                -> None, or raises GuardrailViola
       to the customer, and guessing at it produces confident nonsense.
     </p>
   </div>
+  <div class="callout">
+    <span class="lbl">Once it builds, look at it in Google&rsquo;s own inspector</span>
+    <div class="code">adk web adk_agents</div>
+    <p>
+      Run that from the repository root and open the printed URL: your agent,
+      in ADK&rsquo;s dev UI, with an Events pane showing every tool call it
+      makes and what came back &mdash; the raw trace behind the Coach tab.
+      It refuses to load the agent until <code>build_agent()</code> exists,
+      so if it loads, your Lab&nbsp;3 is structurally right.
+    </p>
+  </div>
 </section>
 
 <section>
